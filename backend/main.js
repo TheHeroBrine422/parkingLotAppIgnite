@@ -67,7 +67,7 @@ function checkParams(res, params, paramList) {
   }
   for (var i = 0; i < paramList.length; i++) {
     if (params[paramList[i]] == null) {
-      res.status(500).send("Invalid parameter "+parameters[i])
+      res.status(500).send("Invalid parameter "+paramList[i])
       return false;
     }
   }

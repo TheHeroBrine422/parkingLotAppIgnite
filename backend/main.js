@@ -163,15 +163,15 @@ app.post('/api/v1/takeSpot', (req, res) => { // Fields: [token, id]
         console.log(err, DBres)
         found = false
         hasSpot = false
-        for (var i = 0; i < DBres.row.length; i++) {
-          if (DBres.row[i].id == req.body.id) {
+        for (var i = 0; i < DBres.rows.length; i++) {
+          if (DBres.rows[i].id == req.body.id) {
             found = true
-            if (DBres.row[i].inuse) {
+            if (DBres.rows[i].inuse) {
               res.status(500).send("Spot in use.")
               return;
             }
           }
-          if (DBres.row[i].current_email == user.email || DBres.row[i].owner_email == user.email) {
+          if (DBres.rows[i].current_email == user.email || DBres.rows[i].owner_email == user.email) {
             res.status(500).send("User already has a spot.")
             return;
           }
@@ -278,9 +278,9 @@ app.post('/api/v1/assignSpot', (req, res) => { // Fields: [token, email, id] (ac
   if (checkParams(res, req.body, ["token", "email", "id"])) {
     verifyToken(res, 1, req.body.token, (user) => {
       if (checkEmail(res, req.body.email)) {
-        pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$3', [req.body.email, req.body.id], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
+        pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$2', [req.body.email, req.body.id], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
           console.log(err, DBres)
-          res.send(JSON.stringify(DBres.rows))
+          res.send("success")
         });
       }
     });

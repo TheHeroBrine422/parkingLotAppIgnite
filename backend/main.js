@@ -1,0 +1,428 @@
+const { Pool } = require('pg')
+const express = require('express')
+const bodyParser = require('body-parser');
+const {OAuth2Client} = require('google-auth-library');
+
+port = 3000;
+CLIENT_ID = "nonexistance"
+sessionTokenLength = 64
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const pool = new Pool({
+  user: 'jonescal',
+  host: 'localhost',
+  database: 'jonescal',
+  password: 'secretpassword',
+  port: 5432,
+})
+
+/*
+Access levels:
+0: Student'
+1: Teacher
+2: Admin
+3: Developer
+
+
+
+TODO List: (might be random comments with TODO as well that are not on this list.) (roughly prioritized.)
+1. TEST EVERYTHING. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
+2. google stuff (likely need Mr. Russel so we have access)
+3. convert all responses to json
+4. session expiration
+5. multiple session tokens
+6. Do more parameter checking in things that do writes (checking license plate is only 6 characters alphanumberic, and similar.)
+7. make testing software
+8. add extra checks for db errors.
+9. maybe remove console.logs - probably need some kind of logging.
+10. deleteAccount - delete reports.
+11. fullcontrol account creation with access 2+ route. for dev testing purposes.
+
+
+
+IDEA:
+for check param write a whole bunch of functions that check paramaters (similar to checkEmail)
+make a 2d array of the paramter names such as email, id, ...
+run the 2d array and have those do checking to make sure they are valid
+
+EX:
+function checkID(id) {
+  test = id.match(/[0-9]+/g)
+  if (test.length != id.length) {
+    return false;
+  }
+  return true;
+}
+
+paramTypes = [["id", checkID],
+              "email", checkEmail]
+*/
+
+function checkParams(res, params, paramList) {
+  if (Object.keys(params).length != paramList.length) {
+    res.status(500).send("Invalid parameter length")
+    return false;
+  }
+  for (var i = 0; i < paramList.length; i++) {
+    if (params[paramList[i]] == null) {
+      res.status(500).send("Invalid parameter "+parameters[i])
+      return false;
+    }
+  }
+  return true;
+}
+
+function checkEmail(res, email) {
+  if (email == null || email == "") {
+    res.status(500).send("Invalid email")
+    return false;
+  }
+  email = email.toLowerCase()
+  email = email.match(/[a-z]*@bentonvillek12.org/g)
+  if (email[0] != email) {
+    res.status(500).send("Invalid email")
+    return false;
+  }
+  return true;
+}
+
+function verifyToken(res, access, token, callback) {
+  if (token.length == sessionTokenLength) {
+    pool.query('SELECT * FROM users WHERE session_token=$1', [token], (err, DBres) => {
+      if (DBres.rows != null && DBres.rows[0] != null) {
+        if (DBres.rows[0].access < access) {
+          res.status(500).send("Invalid permissions")
+          return;
+        }
+        callback(DBres.rows[0])
+      } else {
+        res.status(500).send("Invalid token")
+        return;
+      }
+    });
+  } else {
+    res.status(500).send("Invalid token")
+    return;
+  }
+}
+
+function genSessionToken() {
+  charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  token = ""
+  for (var i = 0; i < sessionTokenLength; i++) {
+    token += charSet.charAt(Math.floor(Math.random()*charSet.length))
+  }
+  return token;
+}
+
+app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user data too.
+  if (checkParams(res, req.query, ["token"])) {
+    verifyToken(res, 0, req.query.token, (user) => {
+      pool.query('SELECT * FROM spots', (err, DBres) => {
+        console.log(err, DBres)
+        endObj = {"spots":DBres.rows, "users":[]}
+        query = "SELECT email, name, license_plate FROM users WHERE email=$1"
+        for (var i = 0; i < DBres.rows.length; i++) {
+          if (endObj.users.indexOf(DBres.rows[i].owner_email) < 0) {
+            endObj.users.push(DBres.rows[i].owner_email)
+          }
+          if (endObj.users.indexOf(DBres.rows[i].current_email) < 0) {
+            endObj.users.push(DBres.rows[i].current_email)
+          }
+        }
+        for (var i = 1; i < endObj.users.length; i++) {
+          query += " OR email=$"+(i+1)
+        }
+        pool.query(query, endObj.users, (err, DBres) => {
+          endObj.users = DBres.rows;
+          res.send(JSON.stringify(endObj))
+        });
+      });
+    });
+  }
+});
+
+// DEV ONLY.
+app.get('/api/v1/getAllUsers', (req, res) => { // Fields: [token]
+  if (checkParams(res, req.query, ["token"])) {
+    verifyToken(res, 3, req.query.token, (user) => {
+      pool.query('SELECT * FROM users', (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows[i]))
+      });
+    });
+  }
+});
+
+app.post('/api/v1/takeSpot', (req, res) => { // Fields: [token, id]
+  if (checkParams(res, req.body, ["token", "id"])) {
+    verifyToken(res, 0, req.body.token, (user) => {
+      pool.query('SELECT * FROM spots', (err, DBres) => {
+        console.log(err, DBres)
+        found = false
+        hasSpot = false
+        for (var i = 0; i < DBres.row.length; i++) {
+          if (DBres.row[i].id == req.body.id) {
+            found = true
+            if (DBres.row[i].inuse) {
+              res.status(500).send("Spot in use.")
+              return;
+            }
+          }
+          if (DBres.row[i].current_email == user.email || DBres.row[i].owner_email == user.email) {
+            res.status(500).send("User already has a spot.")
+            return;
+          }
+        }
+        if (!found) {
+          res.status(500).send("Invalid spot")
+          return;
+        }
+        pool.query('UPDATE spots SET inuse=true, current_email=$1 WHERE id=$2', [user.email, req.body.id], (err, DBres) => {
+          if (err) {
+            res.status(500).send(err)
+          } else {
+            res.send("success")
+          }
+        });
+      });
+    });
+  }
+});
+
+app.post('/api/v1/setLicensePlate', (req, res) => { // Fields: [token, license_plate]
+  if (checkParams(res, req.body, ["token", "license_plate"])) {
+    verifyToken(res, 0, req.body.token, (user) => {
+      pool.query('UPDATE users SET license_plate=$1 WHERE email=$2', [license_plate, user.email], (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.post('/api/v1/releaseSpot', (req, res) => { // Fields: [token, id]
+  if (checkParams(res, req.body, ["token", "id"])) {
+    verifyToken(res, 0, req.body.token, (user) => {
+      pool.query('SELECT * FROM spots WHERE id=$1', [req.body.id], (err, DBres) => {
+        console.log(err, DBres)
+        if (DBres.rows == null || DBres.rows[0] == null) {
+          res.status(500).send("Invalid spot")
+          return;
+        }
+        if (!DBres.rows[0].inuse) {
+          res.status(500).send("Spot not in use.")
+          return;
+        }
+        if (DBres.rows[0].current_email != user.email) {
+          res.status(500).send("Invalid permissions.")
+          return;
+        }
+        pool.query('UPDATE spots SET inuse=false, current_email=\'\' WHERE id=$1', [req.body.id], (err, DBres) => {
+          if (err) {
+            res.status(500).send(err)
+          } else {
+            res.send("success")
+          }
+        });
+      });
+    });
+  }
+});
+
+app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access > 0 send all data in row. If access == 0 send only name, email, license_plate
+  if (checkParams(res, req.query, ["token", "email"])) {
+    verifyToken(res, 0, req.query.token, (user) => {
+      email = []
+      if (req.query.email.includes("]") && req.query.email.includes(",") && req.query.email.includes("[")) {
+        email = JSON.parse(req.query.email)
+        if (email == null) {
+          res.status(500).send("Invalid email")
+          return;
+        }
+        for (var i = 0; i < email.length; i++) {
+          if (!checkEmail(res, email[i])) {
+            return; // checkEmail did the res for us.
+          }
+        }
+      } else {
+        if (checkEmail(res, req.query.email)) {
+          email[0] = req.query.email
+        } else {
+          return; // checkEmail did the res for us.
+        }
+      }
+      query = "SELECT "
+      if (user.access > 0) {
+        query += "*"
+      } else {
+        query += "email, name, license_plate"
+      }
+      query += " FROM users WHERE email=$1"
+      for (var i = 1; i < email.length; i++) {
+        query += " OR email=$"+(i+1)
+      }
+      console.log(query)
+      console.log(email)
+      pool.query(query, email, (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.post('/api/v1/assignSpot', (req, res) => { // Fields: [token, email, id] (access > 0)
+  if (checkParams(res, req.body, ["token", "email", "id"])) {
+    verifyToken(res, 1, req.body.token, (user) => {
+      if (checkEmail(res, req.body.email)) {
+        pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$3', [req.body.email, req.body.id], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
+          console.log(err, DBres)
+          res.send(JSON.stringify(DBres.rows))
+        });
+      }
+    });
+  }
+});
+
+app.post('/api/v1/createBlankUser', (req, res) => { // Fields: [token, email, access] (access > 0)
+  console.log(req.url);
+  if (checkParams(res, req.body, ["token", "email", "access"])) {
+    verifyToken(res, 1, req.query.token, (user) => {
+      if (checkEmail(res, req.body.email)) {
+        if (req.body.access == req.body.access.match(/[0-3]{1}/g)) {
+          pool.query('INSERT INTO users (EMAIL, ACCESS) VALUES ($1, $2)', [req.body.email, req.body.access], (err, DBres) => {
+            console.log(err, DBres)
+            res.send(JSON.stringify(DBres.rows))
+          });
+        } else {
+          res.status(500).send("invalid access")
+        }
+      }
+    });
+  }
+});
+
+app.post('/api/v1/createReport', (req, res) => { // Fields: [token, note, license_plate, spot_id]
+  console.log(req.url);
+  if (checkParams(res, req.body, ["token", "note", "license_plate", "spot_id"])) {
+    verifyToken(res, 0, req.query.token, (user) => {
+      pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, $4, $5)', [user.email, req.body.spot_id, req.body.license_plate, (new Date()).getTime()], (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.post('/api/v1/deleteReport', (req, res) => { // Fields: [token, id]
+  console.log(req.url);
+  if (checkParams(res, req.body, ["token", "id"])) {
+    verifyToken(res, 1, req.query.token, (user) => {
+      pool.query('DELETE FROM reports WHERE id=$1', [req.body.id], (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.get('/api/v1/getReports', (req, res) => { // Fields: [token]
+  if (checkParams(res, req.query, ["token"])) {
+    verifyToken(res, 0, req.query.token, (user) => {
+      pool.query('SELECT * FROM reports', (err, DBres) => {
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+// check email to be bentonvillek12.org
+app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID to write this: https://developers.google.com/identity/sign-in/web/backend-auth and https://developers.google.com/identity/sign-in/web/sign-in
+  console.log(req.url);
+  if (checkParams(res, req.body, ["gtoken"])) {
+    const ticket = await client.verifyIdToken({
+        idToken: req.query.gtoken,
+        audience: CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+    const userid = payload['sub'];
+    // If request specified a G Suite domain:
+    // const domain = payload['hd'];
+    res.send("WIP")
+  }
+});
+
+// pass a email and it gens a token and give it to you. DEV ONLY
+app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => { // Fields: [email]
+  if (checkParams(res, req.query, ["email"])) {
+    if (checkEmail(res, req.query.email)) {
+      pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
+        console.log(err, DBres)
+        sToken = genSessionToken()
+        if (DBres.rows == null || DBres.rows[0] == null) {
+          pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
+            console.log(err, DBres)
+            res.send(JSON.stringify({token: sToken}))
+          });
+        } else {
+          if (DBres.rows[0].session_token.length == sessionTokenLength) {
+            res.send(JSON.stringify({token: DBres.rows[0].session_token}))
+          } else {
+            pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
+              console.log(err, DBres)
+              res.send(JSON.stringify({token: sToken}))
+            });
+          }
+        }
+      });
+    }
+  }
+});
+
+app.post('/api/v1/revokeSessionToken', (req, res) => { // Fields: [token]
+  if (checkParams(res, req.body, ["token"])) {
+    pool.query('UPDATE users SET SESSION_TOKEN=\'\', WHERE SESSION_TOKEN=$1', [req.query.token], (err, DBres) => {
+      console.log(err, DBres)
+      res.send("success")
+    });
+  }
+});
+
+app.post('/api/v1/setAccess', (req, res) => { // Fields: [token, email, access]
+  if (checkParams(res, req.body, ["token", "email", "access"])) {
+    verifyToken(res, 2, req.body.token, (user) => {
+      pool.query('UPDATE users SET access=$1 WHERE email=$2', [access, user.email], (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.post('/api/v1/deleteAccount', (req, res) => { // Fields: [token]
+  if (checkParams(res, req.body, ["token"])) {
+    verifyToken(res, 2, req.body.token, (user) => {
+      pool.query('UPDATE FROM users WHERE email=$1', [user.email], (err, DBres) => {
+        console.log(err, DBres)
+        pool.query('SELECT * FROM spots', (err, DBres) => {
+          for (var i = 0; i < DBres.length; i++) {
+            if (DBres.row[i].current_email == user.email && DBres.row[i].owner_email == user.email) {
+              pool.query('UPDATE spots SET current_email=\'\', inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
+            } else if (DBres.row[i].current_email == user.email) {
+              pool.query('UPDATE spots SET inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
+            } else if (DBres.row[i].owner_email == user.email) {
+              pool.query('UPDATE spots SET owner_email=\'\' FROM spots', (err, DBres) => {});
+            }
+          }
+        });
+      });
+    });
+  }
+});
+
+app.listen(port, () => console.log(`Started server at http://localhost:${port}!`));

@@ -1,0 +1,59 @@
+<form action="http://localhost:3000/api/v1/releaseSpot" method="POST">
+  <div>
+    <label for="token">Token:</label>
+    <input name="token">
+  </div>
+  <div>
+    <label for="id">id:</label>
+    <input name="id">
+  </div>
+  <div>
+    <button>releaseSpot</button>
+  </div>
+</form>
+
+<form action="http://localhost:3000/api/v1/takeSpot" method="POST">
+  <div>
+    <label for="token">Token:</label>
+    <input name="token">
+  </div>
+  <div>
+    <label for="id">id:</label>
+    <input name="id">
+  </div>
+  <div>
+    <button>takeSpot</button>
+  </div>
+</form>
+
+<form action="http://localhost:3000/api/v1/revokeSessionToken" method="POST">
+  <div>
+    <label for="token">Token:</label>
+    <input name="token">
+  </div>
+  <div>
+    <button>revokeSessionToken</button>
+  </div>
+</form>
+
+<form action="http://localhost:3000/api/v1/assignSpot" method="POST">
+  <div>
+    <label for="token">Token:</label>
+    <input name="token">
+  </div>
+  <div>
+    <label for="id">id:</label>
+    <input name="id">
+  </div>
+  <div>
+    <label for="email">email:</label>
+    <input name="email">
+  </div>
+  <div>
+    <button>assignSpot</button>
+  </div>
+</form>
+
+<p><a href="http://localhost:3000/api/v1/getSessionTokenInscureDev?email=">getSessionTokenInscureDev</a></p>
+<p><a href="http://localhost:3000/api/v1/getLot?token=">getLot</a></p>
+<p><a href="http://localhost:3000/api/v1/getUser?token=&email=">getUser</a></p>

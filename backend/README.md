@@ -41,11 +41,11 @@ Post requests are expecting form-data formatting.
 
 Required Access: 0
 
-##### Parameters
+#### Parameters
 
 stoken
 
-##### Response.
+#### Response.
 
 JSON object with users and spots arrays with spot and user data.
 
@@ -78,11 +78,11 @@ URL: http://localhost:3000/api/v1/getLot?stoken={token}
 
 Required Access: 3
 
-##### Parameters
+#### Parameters
 
 stoken
 
-##### Response.
+#### Response.
 
 JSON object with all users.
 
@@ -96,11 +96,11 @@ URL: http://localhost:3000/api/v1/getAllUsers?stoken={token}
 
 Required Access: 0
 
-##### Parameters
+#### Parameters
 
 stoken, email
 
-##### Response.
+#### Response.
 
 JSON object with a user.
 

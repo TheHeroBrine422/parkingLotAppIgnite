@@ -18,35 +18,15 @@ const pool = new Pool({
   port: 5432,
 })
 
-/*
-Access levels:
-0: Student'
-1: Teacher
-2: Admin
-3: Developer
-
-
-
-
-
-
-IDEA:
-for check param write a whole bunch of functions that check paramaters (similar to checkEmail)
-make a 2d array of the paramter names such as email, id, ...
-run the 2d array and have those do checking to make sure they are valid
-
-EX:
-function checkID(id) {
-  test = id.match(/[0-9]+/g)
-  if (test.length != id.length) {
-    return false;
-  }
-  return true;
-}
-
-paramTypes = [["id", checkID],
-              "email", checkEmail]
-*/
+paramRegex = {"sid": /[0-9]*/,
+              "stoken": /[a-zA-Z0-9]{64}/,
+              "email": /[a-z]*@bentonvillek12.org/,
+              "license_plate": /[A-Z0-9]{3}/,
+              "access": /[0-3]{3}/,
+              "note": /[^]*/,
+              "rid": /[0-9]*/,
+              "gtoken": /[^]*/,
+              "emails": /[a-z@\[\]\",]*/}
 
 function checkParams(res, params, paramList) {
   if (Object.keys(params).length != paramList.length) {
@@ -54,7 +34,7 @@ function checkParams(res, params, paramList) {
     return false;
   }
   for (var i = 0; i < paramList.length; i++) {
-    if (params[paramList[i]] == null) {
+    if (params[paramList[i]] == null || params[paramList[i]] == "" || params[paramList[i]].match(paramRegex[paramList[i]])[0] != params[paramList[i]]) {
       res.status(500).send("Invalid parameter "+paramList[i])
       return false;
     }
@@ -67,9 +47,7 @@ function checkEmail(res, email) {
     res.status(500).send("Invalid email")
     return false;
   }
-  email = email.toLowerCase()
-  email = email.match(/[a-z]*@bentonvillek12.org/g)
-  if (email[0] != email) {
+  if (email.match(/[a-z]*@bentonvillek12.org/g)[0] != email) {
     res.status(500).send("Invalid email")
     return false;
   }
@@ -223,22 +201,24 @@ app.post('/api/v1/releaseSpot', (req, res) => { // Fields: [token, id]
 app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access > 0 send all data in row. If access == 0 send only name, email, license_plate
   if (checkParams(res, req.query, ["stoken", "email"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
-      email = []
-      if (req.query.email.includes("]") && req.query.email.includes(",") && req.query.email.includes("[")) {
-        email = JSON.parse(req.query.email)
-        if (email == null) {
-          res.status(500).send("Invalid email")
-          return;
-        }
-        for (var i = 0; i < email.length; i++) {
-          if (!checkEmail(res, email[i])) {
-            return; // checkEmail did the res for us.
-          }
-        }
-      } else {
-        if (checkEmail(res, req.query.email)) {
-          email[0] = req.query.email
-        } else {
+      pool.query("SELECT email, name, license_plate, access FROM users WHERE email=$1", [req.query.email], (err, DBres) => {
+        console.log(err, DBres)
+        res.send(JSON.stringify(DBres.rows))
+      });
+    });
+  }
+});
+
+app.get('/api/v1/getUsers', (req, res) => { // Fields: [token, email] If access > 0 send all data in row. If access == 0 send only name, email, license_plate
+  if (checkParams(res, req.query, ["stoken", "emails"])) {
+    verifyToken(res, 0, req.query.stoken, (user) => {
+      email = JSON.parse(req.query.email)
+      if (email == null) {
+        res.status(500).send("Invalid email")
+        return;
+      }
+      for (var i = 0; i < email.length; i++) {
+        if (!checkEmail(res, email[i])) {
           return; // checkEmail did the res for us.
         }
       }
@@ -246,8 +226,6 @@ app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access >
       for (var i = 1; i < email.length; i++) {
         query += " OR email=$"+(i+1)
       }
-      console.log(query)
-      console.log(email)
       pool.query(query, email, (err, DBres) => {
         console.log(err, DBres)
         res.send(JSON.stringify(DBres.rows))
@@ -259,12 +237,10 @@ app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access >
 app.post('/api/v1/assignSpot', (req, res) => { // Fields: [token, email, id] (access > 0)
   if (checkParams(res, req.body, ["stoken", "email", "sid"])) {
     verifyToken(res, 1, req.body.stoken, (user) => {
-      if (checkEmail(res, req.body.email)) {
-        pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$2', [req.body.email, req.body.sid], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
-          console.log(err, DBres)
-          res.send("success")
-        });
-      }
+      pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$2', [req.body.email, req.body.sid], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
+        console.log(err, DBres)
+        res.send("success")
+      });
     });
   }
 });
@@ -273,15 +249,13 @@ app.post('/api/v1/createBlankUser', (req, res) => { // Fields: [token, email, ac
   console.log(req.url);
   if (checkParams(res, req.body, ["stoken", "email", "access"])) {
     verifyToken(res, 1, req.query.stoken, (user) => {
-      if (checkEmail(res, req.body.email)) {
-        if (req.body.access == req.body.access.match(/[0-3]{1}/g)) {
-          pool.query('INSERT INTO users (EMAIL, ACCESS) VALUES ($1, $2)', [req.body.email, req.body.access], (err, DBres) => {
-            console.log(err, DBres)
-            res.send(JSON.stringify(DBres.rows))
-          });
-        } else {
-          res.status(500).send("invalid access")
-        }
+      if (req.body.access == req.body.access.match(/[0-3]{1}/g)) {
+        pool.query('INSERT INTO users (EMAIL, ACCESS) VALUES ($1, $2)', [req.body.email, req.body.access], (err, DBres) => {
+          console.log(err, DBres)
+          res.send(JSON.stringify(DBres.rows))
+        });
+      } else {
+        res.status(500).send("invalid access")
       }
     });
   }
@@ -342,27 +316,25 @@ app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID 
 // pass a email and it gens a token and give it to you. DEV ONLY
 app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => { // Fields: [email]
   if (checkParams(res, req.query, ["email"])) {
-    if (checkEmail(res, req.query.email)) {
-      pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
-        console.log(err, DBres)
-        sToken = genSessionToken()
-        if (DBres.rows == null || DBres.rows[0] == null) {
-          pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
+    pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
+      console.log(err, DBres)
+      sToken = genSessionToken()
+      if (DBres.rows == null || DBres.rows[0] == null) {
+        pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
+          console.log(err, DBres)
+          res.send(JSON.stringify({token: sToken}))
+        });
+      } else {
+        if (DBres.rows[0].session_token.length == sessionTokenLength) {
+          res.send(JSON.stringify({token: DBres.rows[0].session_token}))
+        } else {
+          pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
             console.log(err, DBres)
             res.send(JSON.stringify({token: sToken}))
           });
-        } else {
-          if (DBres.rows[0].session_token.length == sessionTokenLength) {
-            res.send(JSON.stringify({token: DBres.rows[0].session_token}))
-          } else {
-            pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
-              console.log(err, DBres)
-              res.send(JSON.stringify({token: sToken}))
-            });
-          }
         }
-      });
-    }
+      }
+    });
   }
 });
 

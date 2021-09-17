@@ -15,7 +15,6 @@ Post requests are expecting form-data formatting.
 3. convert all responses to json
 4. session expiration
 5. multiple session tokens
-6. Do more parameter checking in things that do writes (checking license plate is only 6 characters alphanumberic, and similar.)
 7. make testing software
 8. add extra checks for db errors.
 9. maybe remove console.logs - probably need some kind of logging.
@@ -29,11 +28,12 @@ Post requests are expecting form-data formatting.
 | stoken | Session Token. 64 char  | [a-zA-Z0-9]{64} |
 | sid | spot id | [0-9]* |
 | email | only bentonvillek12.org | [a-z]*@bentonvillek12.org |
+| emails | array of emails | [a-z@\[\]\",]* |
 | license_plate | | [A-Z0-9]{3} |
 | access | <details><summary>Levels</summary><p>0: Student</p><p>1: Teacher</p><p>2: Admin</p><p>3: Developer</p></details> | [0-3]{1} |
-| note | for reports | WIP |
+| note | for reports | WIP Curerntly: [^]* (match all) |
 | rid | report id | [0-9]* |
-| gtoken | Google Auth Token (only used to get session token) | WIP |
+| gtoken | Google Auth Token (only used to get session token) | WIP Curerntly: [^]* (match all) |
 
 # GET Routes
 

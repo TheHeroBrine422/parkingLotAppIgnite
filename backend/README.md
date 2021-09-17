@@ -8,15 +8,20 @@ Overall API url: localhost:3000/api/v1/{route}
 
 Post requests are expecting form-data formatting.
 
-# Access Levels.
+# Todo list (roughly prioritized)
 
-0: Student
-
-1: Teacher
-
-2: Admin
-
-3: Developer
+1. TEST EVERYTHING. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
+2. google stuff (likely need Mr. Russel so we have access)
+3. convert all responses to json
+4. session expiration
+5. multiple session tokens
+6. Do more parameter checking in things that do writes (checking license plate is only 6 characters alphanumberic, and similar.)
+7. make testing software
+8. add extra checks for db errors.
+9. maybe remove console.logs - probably need some kind of logging.
+10. deleteAccount - delete reports.
+11. fullcontrol account creation with access 2+ route. for dev testing purposes.
+12. auto reclaim at night for owner spots.
 
 # Possible Parameters
 | Parameter | Information | regex |
@@ -25,7 +30,7 @@ Post requests are expecting form-data formatting.
 | sid | spot id | [0-9]* |
 | email | only bentonvillek12.org | [a-z]*@bentonvillek12.org |
 | license_plate | | [A-Z0-9]{3} |
-| access | | [0-3]{1} |
+| access | <details><summary>Levels</summary><p>0: Student</p><p>1: Teacher</p><p>2: Admin</p><p>3: Developer</p></details> | [0-3]{1} |
 | note | for reports | WIP |
 | rid | report id | [0-9]* |
 | gtoken | Google Auth Token (only used to get session token) | WIP |
@@ -38,7 +43,7 @@ Required Access: 0
 
 ##### Parameters
 
-token: session token
+stoken
 
 ##### Response.
 
@@ -46,7 +51,7 @@ JSON object with users and spots arrays with spot and user data.
 
 Example:
 
-URL: http://localhost:3000/api/v1/getLot?token={token}
+URL: http://localhost:3000/api/v1/getLot?stoken={token}
 ```
 {
   "spots": [
@@ -67,4 +72,40 @@ URL: http://localhost:3000/api/v1/getLot?token={token}
     }
   ]
 }
+```
+
+### /getAllUsers
+
+Required Access: 3
+
+##### Parameters
+
+stoken
+
+##### Response.
+
+JSON object with all users.
+
+Example:
+
+URL: http://localhost:3000/api/v1/getAllUsers?stoken={token}
+```
+```
+
+### /getUser
+
+Required Access: 0
+
+##### Parameters
+
+stoken, email
+
+##### Response.
+
+JSON object with a user.
+
+Example:
+
+URL: http://localhost:3000/api/v1/getUser?stoken={token}&email={email}
+```
 ```

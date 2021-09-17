@@ -68,6 +68,7 @@ typings/
 
 # Output of 'npm pack'
 *.tgz
+.expo-shared/
 
 # Yarn Integrity file
 .yarn-integrity

@@ -11,16 +11,21 @@ Post requests are expecting form-data formatting.
 # Todo list (roughly prioritized)
 
 1. TEST EVERYTHING. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
-2. google stuff (likely need Mr. Russel so we have access)
+2. google stuff (waiting on district for access)
 3. convert all responses to json
-4. session expiration
-5. multiple session tokens
-7. make testing software
-8. add extra checks for db errors.
-9. maybe remove console.logs - probably need some kind of logging.
-10. deleteAccount - delete reports.
-11. fullcontrol account creation with access 2+ route. for dev testing purposes.
-12. auto reclaim at night for owner spots.
+4. make testing software
+5. add extra checks for db errors.
+6. New account creation route with full variable control for access 2+. for dev testing purposes.
+7. auto reclaim at night for owner spots.
+
+### Other Potenial Ideas:
+
+1. deleteAccount - delete reports. (unsure if this is a good idea due to the fact that the reports may still be valid even though the user no longer exists.)
+2. create editReport route - probably need some kind of history for the routes.
+3. maybe remove console.logs - probably need replace with some kind of proper logging. Probably need to find a library for that.
+4. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire.
+
+
 
 # Possible Parameters
 | Parameter | Information | regex |
@@ -28,8 +33,8 @@ Post requests are expecting form-data formatting.
 | stoken | Session Token. 64 char  | [a-zA-Z0-9]{64} |
 | sid | spot id | [0-9]* |
 | email | only bentonvillek12.org | [a-z]*@bentonvillek12.org |
-| emails | array of emails | [a-z@\[\]\",]* |
-| license_plate | | [A-Z0-9]{3} |
+| emails | array of emails. Also checks each individual email with the email paramter regex. | [a-z@\[\]\",]* |
+| license_plate | | [A-Z0-9]{1,7} |
 | access | <details><summary>Levels</summary><p>0: Student</p><p>1: Teacher</p><p>2: Admin</p><p>3: Developer</p></details> | [0-3]{1} |
 | note | for reports | WIP Curerntly: [^]* (match all) |
 | rid | report id | [0-9]* |
@@ -107,5 +112,87 @@ JSON object with a user.
 Example:
 
 URL: http://localhost:3000/api/v1/getUser?stoken={token}&email={email}
+```
+```
+
+### /getUsers
+
+Required Access: 0
+
+#### Parameters
+
+stoken, emails
+
+#### Response.
+
+JSON object with several users.
+
+Example:
+
+URL: http://localhost:3000/api/v1/getUsers?stoken={token}&emails={emails}
+```
+```
+
+### /getReports
+
+Required Access: 0
+
+#### Parameters
+
+stoken
+
+#### Response.
+
+JSON object with all reports
+
+Example:
+
+URL: http://localhost:3000/api/v1/getReports?stoken={token}
+```
+```
+
+### /getSessionTokenGoogle
+
+WIP
+
+### /getSessionTokenInsecureDev
+
+remove this in prod. If real app would have a thing that checks if its running on prod or dev and auto disable in prod.
+
+Required Access: 0
+
+#### Parameters
+
+email
+
+#### Response.
+
+JSON object with stoken.
+
+Example:
+
+URL: http://localhost:3000/api/v1/getSessionTokenInsecureDev?email={email}
+```
+```
+
+# POST Routes
+
+### /takeSpot
+
+remove this in prod. If real app would have a thing that checks if its running on prod or dev and auto disable in prod.
+
+Required Access: 0
+
+#### Parameters
+
+stoken, sid
+
+#### Response.
+
+JSON object with stoken.
+
+Example:
+
+URL: http://localhost:3000/api/v1/getSessionTokenInsecureDev?email={email}
 ```
 ```

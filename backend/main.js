@@ -21,8 +21,8 @@ const pool = new Pool({
 paramRegex = {"sid": /[0-9]*/,
               "stoken": /[a-zA-Z0-9]{64}/,
               "email": /[a-z]*@bentonvillek12.org/,
-              "license_plate": /[A-Z0-9]{3}/,
-              "access": /[0-3]{3}/,
+              "license_plate": /[A-Z0-9]{1,7}/,
+              "access": /[0-3]{1}/,
               "note": /[^]*/,
               "rid": /[0-9]*/,
               "gtoken": /[^]*/,
@@ -38,18 +38,6 @@ function checkParams(res, params, paramList) {
       res.status(500).send("Invalid parameter "+paramList[i])
       return false;
     }
-  }
-  return true;
-}
-
-function checkEmail(res, email) {
-  if (email == null || email == "") {
-    res.status(500).send("Invalid email")
-    return false;
-  }
-  if (email.match(/[a-z]*@bentonvillek12.org/g)[0] != email) {
-    res.status(500).send("Invalid email")
-    return false;
   }
   return true;
 }
@@ -87,7 +75,6 @@ app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user 
   if (checkParams(res, req.query, ["stoken"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
       pool.query('SELECT * FROM spots', (err, DBres) => {
-        console.log(err, DBres)
         endObj = {"spots":DBres.rows, "users":[]}
         query = "SELECT email, name, license_plate FROM users WHERE email=$1"
         for (var i = 0; i < DBres.rows.length; i++) {
@@ -137,7 +124,7 @@ app.post('/api/v1/takeSpot', (req, res) => { // Fields: [token, id]
               return;
             }
           }
-          if (DBres.rows[i].current_email == user.email || DBres.rows[i].owner_email == user.email) {
+          if (DBres.rows[i].current_email == user.email || (DBres.rows[i].owner_email == user.email && !DBres.rows[i].inuse)) {
             res.status(500).send("User already has a spot.")
             return;
           }
@@ -158,7 +145,7 @@ app.post('/api/v1/takeSpot', (req, res) => { // Fields: [token, id]
   }
 });
 
-app.post('/api/v1/setLicensePlate', (req, res) => { // Fields: [token, license_plate]
+app.post('/api/v1/setLicensePlate', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "license_plate"])) {
     verifyToken(res, 0, req.body.stoken, (user) => {
       pool.query('UPDATE users SET license_plate=$1 WHERE email=$2', [license_plate, user.email], (err, DBres) => {
@@ -169,7 +156,7 @@ app.post('/api/v1/setLicensePlate', (req, res) => { // Fields: [token, license_p
   }
 });
 
-app.post('/api/v1/releaseSpot', (req, res) => { // Fields: [token, id]
+app.post('/api/v1/releaseSpot', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "sid"])) {
     verifyToken(res, 0, req.body.stoken, (user) => {
       pool.query('SELECT * FROM spots WHERE id=$1', [req.body.sid], (err, DBres) => {
@@ -198,7 +185,7 @@ app.post('/api/v1/releaseSpot', (req, res) => { // Fields: [token, id]
   }
 });
 
-app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access > 0 send all data in row. If access == 0 send only name, email, license_plate
+app.get('/api/v1/getUser', (req, res) => {
   if (checkParams(res, req.query, ["stoken", "email"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
       pool.query("SELECT email, name, license_plate, access FROM users WHERE email=$1", [req.query.email], (err, DBres) => {
@@ -209,17 +196,18 @@ app.get('/api/v1/getUser', (req, res) => { // Fields: [token, email] If access >
   }
 });
 
-app.get('/api/v1/getUsers', (req, res) => { // Fields: [token, email] If access > 0 send all data in row. If access == 0 send only name, email, license_plate
+app.get('/api/v1/getUsers', (req, res) => {
   if (checkParams(res, req.query, ["stoken", "emails"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
       email = JSON.parse(req.query.email)
       if (email == null) {
-        res.status(500).send("Invalid email")
+        res.status(500).send("Invalid emails")
         return;
       }
       for (var i = 0; i < email.length; i++) {
-        if (!checkEmail(res, email[i])) {
-          return; // checkEmail did the res for us.
+        if (email[i].match(paramRegex["email"])[0] != email[i]) {
+          res.status(500).send("Invalid email")
+          return;
         }
       }
       query = "SELECT email, name, license_plate, access FROM users WHERE email=$1"
@@ -234,7 +222,7 @@ app.get('/api/v1/getUsers', (req, res) => { // Fields: [token, email] If access 
   }
 });
 
-app.post('/api/v1/assignSpot', (req, res) => { // Fields: [token, email, id] (access > 0)
+app.post('/api/v1/assignSpot', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "email", "sid"])) {
     verifyToken(res, 1, req.body.stoken, (user) => {
       pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$2', [req.body.email, req.body.sid], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
@@ -245,7 +233,7 @@ app.post('/api/v1/assignSpot', (req, res) => { // Fields: [token, email, id] (ac
   }
 });
 
-app.post('/api/v1/createBlankUser', (req, res) => { // Fields: [token, email, access] (access > 0)
+app.post('/api/v1/createBlankUser', (req, res) => {
   console.log(req.url);
   if (checkParams(res, req.body, ["stoken", "email", "access"])) {
     verifyToken(res, 1, req.query.stoken, (user) => {
@@ -261,7 +249,7 @@ app.post('/api/v1/createBlankUser', (req, res) => { // Fields: [token, email, ac
   }
 });
 
-app.post('/api/v1/createReport', (req, res) => { // Fields: [token, note, license_plate, spot_id]
+app.post('/api/v1/createReport', (req, res) => {
   console.log(req.url);
   if (checkParams(res, req.body, ["stoken", "note", "license_plate", "sid"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
@@ -273,8 +261,7 @@ app.post('/api/v1/createReport', (req, res) => { // Fields: [token, note, licens
   }
 });
 
-app.post('/api/v1/deleteReport', (req, res) => { // Fields: [token, id]
-  console.log(req.url);
+app.post('/api/v1/deleteReport', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "rid"])) {
     verifyToken(res, 1, req.query.stoken, (user) => {
       pool.query('DELETE FROM reports WHERE id=$1', [req.body.rid], (err, DBres) => {
@@ -295,9 +282,7 @@ app.get('/api/v1/getReports', (req, res) => { // Fields: [token]
   }
 });
 
-// check email to be bentonvillek12.org
 app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID to write this: https://developers.google.com/identity/sign-in/web/backend-auth and https://developers.google.com/identity/sign-in/web/sign-in
-  console.log(req.url);
   if (checkParams(res, req.body, ["gtoken"])) {
     const ticket = await client.verifyIdToken({
         idToken: req.query.gtoken,
@@ -314,31 +299,31 @@ app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID 
 });
 
 // pass a email and it gens a token and give it to you. DEV ONLY
-app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => { // Fields: [email]
+app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
   if (checkParams(res, req.query, ["email"])) {
-    pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
-      console.log(err, DBres)
-      sToken = genSessionToken()
-      if (DBres.rows == null || DBres.rows[0] == null) {
-        pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
-          console.log(err, DBres)
-          res.send(JSON.stringify({token: sToken}))
-        });
-      } else {
-        if (DBres.rows[0].session_token.length == sessionTokenLength) {
-          res.send(JSON.stringify({token: DBres.rows[0].session_token}))
-        } else {
-          pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
+      pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
+        console.log(err, DBres)
+        sToken = genSessionToken()
+        if (DBres.rows == null || DBres.rows[0] == null) {
+          pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
             console.log(err, DBres)
             res.send(JSON.stringify({token: sToken}))
           });
+        } else {
+          if (DBres.rows[0].session_token.length == sessionTokenLength) {
+            res.send(JSON.stringify({token: DBres.rows[0].session_token}))
+          } else {
+            pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
+              console.log(err, DBres)
+              res.send(JSON.stringify({token: sToken}))
+            });
+          }
         }
-      }
-    });
+      });
   }
 });
 
-app.post('/api/v1/revokeSessionToken', (req, res) => { // Fields: [token]
+app.post('/api/v1/revokeSessionToken', (req, res) => {
   if (checkParams(res, req.body, ["stoken"])) {
     pool.query('UPDATE users SET SESSION_TOKEN=\'\', WHERE SESSION_TOKEN=$1', [req.query.stoken], (err, DBres) => {
       console.log(err, DBres)
@@ -347,7 +332,7 @@ app.post('/api/v1/revokeSessionToken', (req, res) => { // Fields: [token]
   }
 });
 
-app.post('/api/v1/setAccess', (req, res) => { // Fields: [token, email, access]
+app.post('/api/v1/setAccess', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "email", "access"])) {
     verifyToken(res, 2, req.body.stoken, (user) => {
       pool.query('UPDATE users SET access=$1 WHERE email=$2', [access, user.email], (err, DBres) => {
@@ -358,7 +343,7 @@ app.post('/api/v1/setAccess', (req, res) => { // Fields: [token, email, access]
   }
 });
 
-app.post('/api/v1/deleteAccount', (req, res) => { // Fields: [token]
+app.post('/api/v1/deleteAccount', (req, res) => {
   if (checkParams(res, req.body, ["stoken"])) {
     verifyToken(res, 2, req.body.stoken, (user) => {
       pool.query('UPDATE FROM users WHERE email=$1', [user.email], (err, DBres) => {

@@ -8,22 +8,22 @@ Overall API url: localhost:3000/api/v1/{route}
 
 Post requests are expecting form-data formatting.
 
-# Todo list (roughly prioritized)
+# Todo list (not prioritized)
 
-1. TEST EVERYTHING. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
+1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
 2. google stuff (waiting on district for access)
 3. convert all responses to json
 4. make testing software
 5. add extra checks for db errors.
 6. New account creation route with full variable control for access 2+. for dev testing purposes.
 7. auto reclaim at night for owner spots.
+8. get user by license plate route for reports.
 
-### Other Potenial Ideas:
+### Other Potential Ideas
 
-1. deleteAccount - delete reports. (unsure if this is a good idea due to the fact that the reports may still be valid even though the user no longer exists.)
-2. create editReport route - probably need some kind of history for the routes.
-3. maybe remove console.logs - probably need replace with some kind of proper logging. Probably need to find a library for that.
-4. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire.
+1. deleteAccount - delete reports. (unsure if this is a good idea due to reports still being valid, user just no longer existing.)
+2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that.
+3. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire. (best way for this is likely to make a table of session tokens, and pull from that.)
 
 
 
@@ -39,6 +39,10 @@ Post requests are expecting form-data formatting.
 | note | for reports | WIP Curerntly: [^]* (match all) |
 | rid | report id | [0-9]* |
 | gtoken | Google Auth Token (only used to get session token) | WIP Curerntly: [^]* (match all) |
+
+# Error Codes
+
+WIP. Check main.js
 
 # GET Routes
 
@@ -189,10 +193,11 @@ stoken, sid
 
 #### Response.
 
-JSON object with stoken.
-
+"sucess" or err message.
 Example:
 
-URL: http://localhost:3000/api/v1/getSessionTokenInsecureDev?email={email}
+URL: http://localhost:3000/api/v1/takeSpot
+stoken={stoken}
+id=1
 ```
 ```

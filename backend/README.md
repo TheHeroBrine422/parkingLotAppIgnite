@@ -14,17 +14,14 @@ Post requests are expecting form-data formatting.
 2. google stuff (waiting on district for access)
 3. make testing software
 4. add extra checks for db errors. (Update: most of these are done but I still want some kind of check that the SQL statements actually worked.)
-5. New account creation route with full variable control for access 2+. for dev testing purposes.
 6. auto reclaim at night for owner spots.
-7. get user by license plate route for reports.
 
 ### Other Potential Ideas
 
-1. deleteAccount - delete reports. (unsure if this is a good idea due to reports still being valid, user just no longer existing.)
-2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that.
+1. deleteAccount - delete reports. (unsure if this is a good idea due to reports still being valid, user just no longer existing.) (maybe allow user to decide if they get deleted.)
+2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
 3. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire. (best way for this is likely to make a table of session tokens, and pull from that.)
-
-
+4. allow for editing of reports. Probably need a history for this.
 
 # Possible Parameters
 | Parameter | Information | regex |

@@ -217,6 +217,20 @@ app.get('/api/v1/getUser', (req, res) => {
   }
 });
 
+app.get('/api/v1/getUserByPlate', (req, res) => {
+  if (checkParams(res, req.query, ["stoken", "license_plate"])) {
+    verifyToken(res, 0, req.query.stoken, (user) => {
+      pool.query("SELECT email, name, license_plate, access FROM users WHERE license_plate=$1", [req.query.email], (err, DBres) => {
+        if (err) {
+          res.status(500).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg":"success"}))
+        }
+      });
+    });
+  }
+});
+
 app.get('/api/v1/getUsers', (req, res) => {
   if (checkParams(res, req.query, ["stoken", "emails"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
@@ -264,17 +278,29 @@ app.post('/api/v1/createBlankUser', (req, res) => {
   console.log(req.url);
   if (checkParams(res, req.body, ["stoken", "email", "access"])) {
     verifyToken(res, 1, req.query.stoken, (user) => {
-      if (req.body.access == req.body.access.match(/[0-3]{1}/g)) {
-        pool.query('INSERT INTO users (EMAIL, ACCESS) VALUES ($1, $2)', [req.body.email, req.body.access], (err, DBres) => {
-          if (err) {
-            res.status(500).send(error(107, JSON.stringify(err)))
-          } else {
-            res.send(JSON.stringify({"msg":"success"}))
-          }
-        });
-      } else {
-        res.status(500).send(error(102))
-      }
+      pool.query('INSERT INTO users (EMAIL, ACCESS) VALUES ($1, $2)', [req.body.email, req.body.access], (err, DBres) => {
+        if (err) {
+          res.status(500).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg":"success"}))
+        }
+      });
+    });
+  }
+});
+
+app.post('/api/v1/createUserAdmin', (req, res) => { // mostly intended for testing.
+  console.log(req.url);
+  if (checkParams(res, req.body, ["stoken", "email", "access", "name", "license_plate"])) {
+    verifyToken(res, 2, req.query.stoken, (user) => {
+      sToken = genSessionToken()
+      pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME, LICENSE_PLATE) VALUES ($1, $2, $3, $4, $5)', [sToken, req.body.email, req.body.access, req.body.name, req.body.license_plate], (err, DBres) => {
+        if (err) {
+          res.status(500).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg":sToken}))
+        }
+      });
     });
   }
 });

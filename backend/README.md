@@ -12,12 +12,11 @@ Post requests are expecting form-data formatting.
 
 1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
 2. google stuff (waiting on district for access)
-3. convert all responses to json
-4. make testing software
-5. add extra checks for db errors.
-6. New account creation route with full variable control for access 2+. for dev testing purposes.
-7. auto reclaim at night for owner spots.
-8. get user by license plate route for reports.
+3. make testing software
+4. add extra checks for db errors. (Update: most of these are done but I still want some kind of check that the SQL statements actually worked.)
+5. New account creation route with full variable control for access 2+. for dev testing purposes.
+6. auto reclaim at night for owner spots.
+7. get user by license plate route for reports.
 
 ### Other Potential Ideas
 

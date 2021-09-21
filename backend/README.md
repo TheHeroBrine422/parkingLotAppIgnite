@@ -21,9 +21,52 @@ Post requests are expecting form-data formatting.
 
 1. deleteAccount - delete reports. unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
-3. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire. best way for this is likely to make a table of session tokens, and pull from that.
 4. allow for editing of reports. Probably need a history for this.
 5. allow teachers (and students maybe) to schedule when their spot(s) will be available.
+
+# Test List:
+
+* [x] GET getLot
+* [x] GET getAllUsers
+* [x] POST takeSpot
+* [ ] POST setLicensePlate
+* [x] POST releaseSpot
+* [x] GET getUser
+* [ ] GET getUserByPlate
+* [x] GET getUsers
+* [ ] POST assignSpot
+* [ ] POST createBlankUser
+* [ ] POST createUserAdmin (DEV)
+* [ ] POST createReport
+* [ ] POST deleteReport
+* [ ] GET getReports
+* [ ] GET getSessionTokenGoogle
+* [ ] GET getSessionTokenInsecureDev (DEV)
+* [ ] POST revokeSessionToken
+* [ ] POST setAccess
+* [ ] POST deleteAccount
+
+# Documentation List:
+
+* [x] GET getLot
+* [ ] GET getAllUsers
+* [ ] POST takeSpot
+* [ ] POST setLicensePlate
+* [ ] POST releaseSpot
+* [ ] GET getUser
+* [ ] GET getUserByPlate
+* [ ] GET getUsers
+* [ ] POST assignSpot
+* [ ] POST createBlankUser
+* [ ] POST createUserAdmin (DEV)
+* [ ] POST createReport
+* [ ] POST deleteReport
+* [ ] GET getReports
+* [ ] GET getSessionTokenGoogle
+* [ ] GET getSessionTokenInsecureDev (DEV)
+* [ ] POST revokeSessionToken
+* [ ] POST setAccess
+* [ ] POST deleteAccount
 
 # Possible Parameters
 | Parameter | Information | regex |
@@ -31,7 +74,7 @@ Post requests are expecting form-data formatting.
 | stoken | Session Token. 64 char  | [a-zA-Z0-9]{64} |
 | sid | spot id | [0-9]* |
 | email | only bentonvillek12.org | [a-z]*@bentonvillek12.org |
-| emails | array of emails. Also checks each individual email with the email paramter regex. | [a-z@\[\]\",]* |
+| emails | array of emails. Also checks each individual email with the email paramter regex. | [a-z@0-9.\[\]\",]* |
 | license_plate | | [A-Z0-9]{1,7} |
 | access | <details><summary>Levels</summary><p>0: Student</p><p>1: Teacher</p><p>2: Admin</p><p>3: Developer</p></details> | [0-3]{1} |
 | note | for reports | WIP Curerntly: [^]* (match all) |

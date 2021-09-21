@@ -27,7 +27,7 @@ paramRegex = {"sid": /[0-9]*/,
               "note": /[^]*/,
               "rid": /[0-9]*/,
               "gtoken": /[^]*/,
-              "emails": /[a-z@\[\]\",]*/}
+              "emails": /[a-z@0-9.\[\]\",]*/}
 
 errors = {100: "Invalid Number of parameters.",
           101: "Invalid Parameter.",
@@ -63,7 +63,7 @@ function verifyToken(res, access, token, callback) {
   if (token.length == sessionTokenLength) {
     pool.query('SELECT * FROM tokens WHERE session_token=$1', [token], (err, DBres) => {
       if (DBres.rows != null && DBres.rows[0] != null && DBres.rows[0].email != null) {
-        if (new Date(DBres.rows[0].expiration).getTime() > Date.now()) {
+        if (new Date(Number(DBres.rows[0].expiration)).getTime() > Date.now()) {
           pool.query('SELECT * FROM users WHERE email=$1', [DBres.rows[0].email], (err, DBres) => {
             if (DBres.rows != null && DBres.rows[0] != null) {
               if (DBres.rows[0].access < access) {
@@ -131,8 +131,11 @@ app.get('/api/v1/getAllUsers', (req, res) => {
   if (checkParams(res, req.query, ["stoken"])) {
     verifyToken(res, 3, req.query.stoken, (user) => {
       pool.query('SELECT * FROM users', (err, DBres) => {
-        console.log(err, DBres)
-        res.send(JSON.stringify(DBres.rows[i]))
+        if (err) {
+          res.status(500).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify(DBres.rows))
+        }
       });
     });
   }
@@ -142,18 +145,17 @@ app.post('/api/v1/takeSpot', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "sid"])) {
     verifyToken(res, 0, req.body.stoken, (user) => {
       pool.query('SELECT * FROM spots', (err, DBres) => {
-        console.log(err, DBres)
         found = false
         hasSpot = false
         for (var i = 0; i < DBres.rows.length; i++) {
-          if (DBres.rows[i].sid == req.body.sid) {
+          if (DBres.rows[i].id == req.body.sid) {
             found = true
             if (DBres.rows[i].inuse) {
               res.status(500).send(error(104))
               return;
             }
           }
-          if (DBres.rows[i].current_email == user.email || (DBres.rows[i].owner_email == user.email && !DBres.rows[i].inuse)) {
+          if (DBres.rows[i].current_email == user.email || (DBres.rows[i].owner_email == user.email && !DBres.rows[i].inuse && DBres.rows[i].id != req.body.sid)) {
             res.status(500).send(error(105))
             return;
           }
@@ -166,7 +168,7 @@ app.post('/api/v1/takeSpot', (req, res) => {
           if (err) {
             res.status(500).send(error(107, JSON.stringify(err)))
           } else {
-            res.send("success")
+            res.send(JSON.stringify({"msg":"success"}))
           }
         });
       });
@@ -192,7 +194,6 @@ app.post('/api/v1/releaseSpot', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "sid"])) {
     verifyToken(res, 0, req.body.stoken, (user) => {
       pool.query('SELECT * FROM spots WHERE id=$1', [req.body.sid], (err, DBres) => {
-        console.log(err, DBres)
         if (DBres.rows == null || DBres.rows[0] == null) {
           res.status(500).send(error(101, "sid"))
           return;
@@ -209,7 +210,7 @@ app.post('/api/v1/releaseSpot', (req, res) => {
           if (err) {
             res.status(500).send(error(107, JSON.stringify(err)))
           } else {
-            res.send(JSON.stringify("success"))
+            res.send(JSON.stringify({"msg":"success"}))
           }
         });
       });
@@ -224,7 +225,7 @@ app.get('/api/v1/getUser', (req, res) => {
         if (err) {
           res.status(500).send(error(107, JSON.stringify(err)))
         } else {
-          res.send(JSON.stringify({"msg":"success"}))
+          res.send(JSON.stringify(DBres.rows[0]))
         }
       });
     });
@@ -246,9 +247,10 @@ app.get('/api/v1/getUserByPlate', (req, res) => {
 });
 
 app.get('/api/v1/getUsers', (req, res) => {
+  console.log(req.query)
   if (checkParams(res, req.query, ["stoken", "emails"])) {
     verifyToken(res, 0, req.query.stoken, (user) => {
-      email = JSON.parse(req.query.email)
+      email = JSON.parse(req.query.emails)
       if (email == null) {
         res.status(500).send(error(101, "emails"))
         return;
@@ -380,7 +382,6 @@ app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID 
 
 // pass a email and it gens a token and give it to you. DEV ONLY
 app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
-  console.log("getSessionTokenInsecureDev: "+JSON.stringify(req.query))
   if (checkParams(res, req.query, ["email"])) {
     pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
       if (err) {
@@ -402,7 +403,7 @@ app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
           if (err) {
             res.status(500).send(error(107, JSON.stringify(err)))
           } else {
-            res.send(JSON.stringify({"msg": sToken}))
+            res.send(JSON.stringify({"token": sToken, "exp": exp}))
           }
         });
       }

@@ -1,4 +1,4 @@
-DROP TABLE spots, users, reports;
+DROP TABLE spots, users, reports, tokens;
 
 CREATE TABLE spots(
   ID SERIAL PRIMARY KEY,
@@ -10,7 +10,6 @@ CREATE TABLE spots(
 );
 
 CREATE TABLE users(
-  SESSION_TOKEN TEXT,
   EMAIL TEXT PRIMARY KEY,
   ACCESS INT,
   NAME TEXT,
@@ -26,6 +25,12 @@ CREATE TABLE reports(
   CREATION_DATE TEXT
 );
 
+CREATE TABLE tokens(
+  SESSION_TOKEN TEXT PRIMARY KEY,
+  EMAIL TEXT,
+  EXPIRATION TEXT
+);
+
 INSERT INTO spots (NUM, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES (1, 'AM', 'jonescal@bentonvillek12.org', true, 'jonescal@bentonvillek12.org');
-INSERT INTO users VALUES ('', 'jonescal@bentonvillek12.org', 3, 'Caleb Jones', '123ABC');
-INSERT INTO users VALUES ('', 'abc@bentonvillek12.org', 2, 'ABC Jones', '124ABC');
+INSERT INTO users VALUES ('jonescal@bentonvillek12.org', 3, 'Caleb Jones', '123ABC');
+INSERT INTO users VALUES ('abc@bentonvillek12.org', 2, 'ABC Jones', '124ABC');

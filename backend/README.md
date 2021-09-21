@@ -12,16 +12,18 @@ Post requests are expecting form-data formatting.
 
 1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
 2. google stuff (waiting on district for access)
-3. make testing software
+3. create library to access routes for testing software and frontend.
+3. make testing software using library
 4. add extra checks for db errors. (Update: most of these are done but I still want some kind of check that the SQL statements actually worked.)
-6. auto reclaim at night for owner spots.
+5. auto reclaim at night for owner spots.
 
 ### Other Potential Ideas
 
-1. deleteAccount - delete reports. (unsure if this is a good idea due to reports still being valid, user just no longer existing.) (maybe allow user to decide if they get deleted.)
+1. deleteAccount - delete reports. unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
-3. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire. (best way for this is likely to make a table of session tokens, and pull from that.)
+3. better session tokens. Allow users to have multiple tokens for different devices and make tokens expire. best way for this is likely to make a table of session tokens, and pull from that.
 4. allow for editing of reports. Probably need a history for this.
+5. allow teachers (and students maybe) to schedule when their spot(s) will be available.
 
 # Possible Parameters
 | Parameter | Information | regex |

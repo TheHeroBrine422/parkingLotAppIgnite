@@ -6,6 +6,7 @@ const {OAuth2Client} = require('google-auth-library');
 port = 3000;
 CLIENT_ID = "nonexistance"
 sessionTokenLength = 64
+expirationTime = 30*24*60*60*1000 // 30 days
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -31,6 +32,7 @@ paramRegex = {"sid": /[0-9]*/,
 errors = {100: "Invalid Number of parameters.",
           101: "Invalid Parameter.",
           102: "Invalid permissions.",
+          103: "Expired token",
           104: "Spot in use.",
           105: "User already has a spot.",
           107: "DB Error",
@@ -59,13 +61,25 @@ function checkParams(res, params, paramList) {
 
 function verifyToken(res, access, token, callback) {
   if (token.length == sessionTokenLength) {
-    pool.query('SELECT * FROM users WHERE session_token=$1', [token], (err, DBres) => {
-      if (DBres.rows != null && DBres.rows[0] != null) {
-        if (DBres.rows[0].access < access) {
-          res.status(500).send(error(102))
+    pool.query('SELECT * FROM tokens WHERE session_token=$1', [token], (err, DBres) => {
+      if (DBres.rows != null && DBres.rows[0] != null && DBres.rows[0].email != null) {
+        if (new Date(DBres.rows[0].expiration).getTime() > Date.now()) {
+          pool.query('SELECT * FROM users WHERE email=$1', [DBres.rows[0].email], (err, DBres) => {
+            if (DBres.rows != null && DBres.rows[0] != null) {
+              if (DBres.rows[0].access < access) {
+                res.status(500).send(error(102))
+                return;
+              }
+              callback(DBres.rows[0])
+            } else {
+              res.status(500).send(error(101, "stoken"))
+              return;
+            }
+          });
+        } else {
+          res.status(500).send(error(103))
           return;
         }
-        callback(DBres.rows[0])
       } else {
         res.status(500).send(error(101, "stoken"))
         return;
@@ -366,6 +380,7 @@ app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID 
 
 // pass a email and it gens a token and give it to you. DEV ONLY
 app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
+  console.log("getSessionTokenInsecureDev: "+JSON.stringify(req.query))
   if (checkParams(res, req.query, ["email"])) {
     pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
       if (err) {
@@ -373,26 +388,23 @@ app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
         return;
       }
       sToken = genSessionToken()
+      exp = Date.now()+expirationTime
       if (DBres.rows == null || DBres.rows[0] == null) {
-        pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME) VALUES ($1, $2, 0, $3)', [sToken, req.query.email, req.query.email.split("@")[0]], (err, DBres) => {
+        pool.query('INSERT INTO users (EMAIL, ACCESS, NAME) VALUES ($2, 0, $3); INSERT INTO tokens (SESSION_TOKEN, EMAIL, EXPIRATION) VALUES ($1, $2, $4)', [sToken, req.query.email, req.query.email.split("@")[0], exp], (err, DBres) => {
+          if (err) {
+            res.status(500).send(error(107, JSON.stringify(err)))
+          } else {
+            res.send(JSON.stringify({"token": sToken, "exp": exp}))
+          }
+        });
+      } else {
+        pool.query('INSERT INTO tokens (SESSION_TOKEN, EMAIL, EXPIRATION) VALUES ($1, $2, $3)', [sToken, req.query.email, exp], (err, DBres) => {
           if (err) {
             res.status(500).send(error(107, JSON.stringify(err)))
           } else {
             res.send(JSON.stringify({"msg": sToken}))
           }
         });
-      } else {
-        if (DBres.rows[0].session_token.length == sessionTokenLength) {
-          res.send(JSON.stringify({token: DBres.rows[0].session_token}))
-        } else {
-          pool.query('UPDATE users SET SESSION_TOKEN=$1 WHERE email=$2', [sToken, req.query.email], (err, DBres) => {
-            if (err) {
-              res.status(500).send(error(107, JSON.stringify(err)))
-            } else {
-              res.send(JSON.stringify({"msg": sToken}))
-            }
-          });
-        }
       }
     });
   }
@@ -400,7 +412,7 @@ app.get('/api/v1/getSessionTokenInsecureDev', (req, res) => {
 
 app.post('/api/v1/revokeSessionToken', (req, res) => {
   if (checkParams(res, req.body, ["stoken"])) {
-    pool.query('UPDATE users SET SESSION_TOKEN=\'\', WHERE SESSION_TOKEN=$1', [req.query.stoken], (err, DBres) => {
+    pool.query('DELETE FROM tokens WHERE SESSION_TOKEN=$1', [req.query.stoken], (err, DBres) => {
       if (err) {
         res.status(500).send(error(107, JSON.stringify(err)))
       } else {
@@ -449,4 +461,21 @@ app.post('/api/v1/deleteAccount', (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Started server at http://localhost:${port}!`));
+app.listen(port, () => {
+  console.log(`Started server at http://localhost:${port}!`)
+  setTimeout(resetSpots, calcTimeResetSpots())
+});
+
+function resetSpots() {
+
+  setTimeout(resetSpots, calcTimeResetSpots())
+}
+
+function calcTimeResetSpots() {
+  currentTime = new Date();
+  wait = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 13, 30).getTime() - currentTime.getTime()
+  if (wait < 0) {
+    wait += 86400000; // it's after 10am, try 10am tomorrow.
+  }
+  return wait
+}

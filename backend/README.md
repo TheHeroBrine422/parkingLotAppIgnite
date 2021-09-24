@@ -16,6 +16,7 @@ Post requests are expecting form-data formatting.
 3. make testing software using library
 4. add extra checks for db errors. (Update: most of these are done but I still want some kind of check that the SQL statements actually worked.)
 5. auto reclaim at night for owner spots.
+6. scheduling
 
 ### Other Potential Ideas
 
@@ -23,6 +24,7 @@ Post requests are expecting form-data formatting.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
 4. allow for editing of reports. Probably need a history for this.
 5. allow teachers (and students maybe) to schedule when their spot(s) will be available.
+5. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
 
 # Test List:
 
@@ -45,6 +47,7 @@ Post requests are expecting form-data formatting.
 * [ ] POST revokeSessionToken
 * [ ] POST setAccess
 * [ ] POST deleteAccount
+* [ ] POST unassignSpot
 
 # Documentation List:
 
@@ -67,6 +70,7 @@ Post requests are expecting form-data formatting.
 * [ ] POST revokeSessionToken
 * [ ] POST setAccess
 * [ ] POST deleteAccount
+* [ ] POST unassignSpot
 
 # Possible Parameters
 | Parameter | Information | regex |

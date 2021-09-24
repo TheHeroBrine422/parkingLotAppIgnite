@@ -21,7 +21,7 @@ APIURL = "http://localhost:3000/api/v1/";
   console.log(res.data)
   res = await get("getUser", {"stoken":token, "email": "jonescal@bentonvillek12.org"})
   console.log(res.data)
-  res = await get("getUsers", {"stoken":token, "emails": JSON.stringify(["jonescal@bentonvillek12.org", "abc@bentonvillek12.org"])})
+  res = await get("getUsers", {"emails": JSON.stringify(["jonescal@bentonvillek12.org", "abc@bentonvillek12.org"])})
   console.log(res.data)
 })();
 

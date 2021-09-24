@@ -31,6 +31,17 @@ CREATE TABLE tokens(
   EXPIRATION TEXT
 );
 
+CREATE TABLE ranges(
+  EMAIL TEXT PRIMARY KEY,
+  RANGE TEXT
+);
+
+CREATE TABLE schedule(
+  EMAIL TEXT PRIMARY KEY,
+  ID TEXT,
+  ACTION TEXT
+);
+
 INSERT INTO spots (NUM, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES (1, 'AM', 'jonescal@bentonvillek12.org', true, 'jonescal@bentonvillek12.org');
 INSERT INTO users VALUES ('jonescal@bentonvillek12.org', 3, 'Caleb Jones', '123ABC');
 INSERT INTO users VALUES ('abc@bentonvillek12.org', 2, 'ABC Jones', '124ABC');

@@ -29,7 +29,8 @@ paramRegex = {"sid": /[0-9]*/,
               "rid": /[0-9]*/,
               "gtoken": /[^]*/,
               "emails": /[a-z@0-9.\[\]\",]*/,
-              "range": /[0-9\[\]\",]*/}
+              "range": /[0-9\[\]\",]*/,
+              "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/}
 
 errors = {100: "Invalid Number of parameters.",
           101: "Invalid Parameter.",
@@ -45,6 +46,10 @@ function error(id, extra) {
     return JSON.stringify({"err": id, "msg": errors[id], "extra": extra})
   }
   return JSON.stringify({"err": id, "msg": errors[id]})
+}
+
+function isValidDate(d) {
+  return d instanceof Date && !isNaN(d);
 }
 
 function checkParams(res, params, paramList) {
@@ -143,6 +148,20 @@ app.get('/api/v1/getAllUsers', (req, res) => {
   }
 });
 
+app.get('/api/v1/getSchedule', (req, res) => {
+  if (checkParams(res, req.query, ["stoken"])) {
+    verifyToken(res, 0, req.query.stoken, (user) => {
+      pool.query('SELECT * FROM schedule', (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify(DBres.rows))
+        }
+      });
+    });
+  }
+});
+
 app.post('/api/v1/takeSpot', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "sid"])) {
     verifyToken(res, 0, req.body.stoken, (user) => {
@@ -189,6 +208,31 @@ app.post('/api/v1/setLicensePlate', (req, res) => {
         }
       });
     });
+  }
+});
+
+app.post('/api/v1/releaseSpotFuture', (req, res) => {
+  if (checkParams(res, req.body, ["stoken", "sid", "day"])) {
+    if (isValidDate(new Date(req.body.day))) {
+      verifyToken(res, 0, req.body.stoken, (user) => {
+        pool.query('SELECT * FROM schedule WHERE id=$1 AND day=$2 AND action=$3', [req.body.sid, req.body.day, "release"], (err, DBres) => {
+          if (DBres.rows != null || DBres.rows[0] != null) {
+            res.status(400).send(error(101, "sid or day"))
+            return;
+          }
+          pool.query('INSERT INTO schedule VALUES ($1, $2, $3, $4)', [user.email, req.body.sid, "release", req.body.day], (err, DBres) => {
+            if (err) {
+              res.status(400).send(error(107, JSON.stringify(err)))
+            } else {
+              res.send(JSON.stringify({"msg":"success"}))
+            }
+          });
+        });
+      });
+    } else {
+      res.status(400).send(error(101, "day"))
+      return;
+    }
   }
 });
 
@@ -429,11 +473,11 @@ app.post('/api/v1/setAccess', (req, res) => {
 app.post('/api/v1/assignRange', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "email", "range"])) {
     verifyToken(res, 2, req.body.stoken, (user) => {
-      pool.query('SELECT * FROM ranges WHERE email=$1', [req.body.email] (err, DBres)) {
+      pool.query('SELECT * FROM ranges WHERE email=$1', [req.body.email], (err, DBres) => {
         if (DBres.rows == null || DBres.rows[0] == null) {
           try {
             range = JSON.parse(req.body.range)
-              if (range != null) {
+            if (range != null) {
               pool.query('INSERT INTO ranges (EMAIL, RANGE) VALUES ($1, $2)', [req.body.email, req.body.range, req.query.email.split("@")[0], exp], (err, DBres) => {
                 if (err) {
                   res.status(400).send(error(107, JSON.stringify(err)))
@@ -456,8 +500,7 @@ app.post('/api/v1/assignRange', (req, res) => {
             }
           });
         }
-      }
-
+      });
     });
   }
 });
@@ -547,6 +590,14 @@ if (devMode) { // this stuff should probably be completely commented out for sec
       });
     }
   });
+
+  app.get('/api/v1/forceResetSpots', (req, res) => {
+    if (checkParams(res, req.query, ["stoken"])) {
+      verifyToken(res, 3, req.query.stoken, (user) => {
+        resetSpots()
+      });
+    }
+  });
 }
 
 app.listen(port, () => {
@@ -555,7 +606,19 @@ app.listen(port, () => {
 });
 
 function resetSpots() {
-
+  pool.query('UPDATE spots SET CURRENT_EMAIL = OWNER_EMAIL', (err, DBres) => {
+    dateObj = new Date()
+    day = dateObj.getMonth()+"-"+dateObj.getDate()+"-"+dateObj.getFullYear()
+    pool.query('SELECT schedule WHERE day=$1', [day], (err, DBres) => {
+      if (DBres != null && DBres.rows != null) {
+        for (var i = 0; i < DBres.rows.length; i++) {
+          if (DBres.rows[i].action == "release") {
+            pool.query('UPDATE spots SET CURRENT_EMAIL = \'\', inuse=false WHERE ID=$1', [DBres.rows[i].id]) // TODO: better SQL statement. Could prepare and do one rather then tons.
+          }
+        }
+      }
+    });
+  });
   setTimeout(resetSpots, calcTimeResetSpots())
 }
 
@@ -563,7 +626,7 @@ function calcTimeResetSpots() {
   currentTime = new Date();
   wait = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate(), 13, 30).getTime() - currentTime.getTime()
   if (wait < 0) {
-    wait += 86400000; // it's after 10am, try 10am tomorrow.
+    wait += 86400000; // if its already passed, do it tmrw.
   }
   return wait
 }

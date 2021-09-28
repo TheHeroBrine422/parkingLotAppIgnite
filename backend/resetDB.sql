@@ -1,9 +1,8 @@
-DROP TABLE spots, users, reports, tokens;
+DROP TABLE spots, users, reports, tokens, ranges, schedule;
 
 CREATE TABLE spots(
   ID SERIAL PRIMARY KEY,
-  NUM INT,
-  SECTION TEXT,
+  NAME TEXT,
   OWNER_EMAIL TEXT,
   INUSE BOOLEAN,
   CURRENT_EMAIL TEXT
@@ -37,9 +36,10 @@ CREATE TABLE ranges(
 );
 
 CREATE TABLE schedule(
-  EMAIL TEXT PRIMARY KEY,
+  EMAIL TEXT
   ID TEXT,
-  ACTION TEXT
+  ACTION TEXT,
+  DAY TEXT
 );
 
 INSERT INTO spots (NUM, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES (1, 'AM', 'jonescal@bentonvillek12.org', true, 'jonescal@bentonvillek12.org');

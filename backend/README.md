@@ -14,8 +14,7 @@ Post requests are expecting form-data formatting.
 2. google stuff (waiting on district for access)
 3. create library to access routes for testing software and frontend.
 3. make testing software using library
-4. add extra checks for db errors. (Update: most of these are done but I still want some kind of check that the SQL statements actually worked.)
-5. auto reclaim at night for owner spots.
+4. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 6. scheduling
 
 ### Other Potential Ideas
@@ -23,8 +22,8 @@ Post requests are expecting form-data formatting.
 1. deleteAccount - delete reports. unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
 4. allow for editing of reports. Probably need a history for this.
-5. allow teachers (and students maybe) to schedule when their spot(s) will be available.
 5. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
+1. carpool?
 
 # Test List:
 

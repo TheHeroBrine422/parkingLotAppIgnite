@@ -13,17 +13,16 @@ Post requests are expecting form-data formatting.
 1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
 2. google stuff (waiting on district for access)
 3. create library to access routes for testing software and frontend.
-3. make testing software using library
-4. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-6. scheduling
+4. make testing software using library
+5. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 
 ### Other Potential Ideas
 
 1. deleteAccount - delete reports. unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
-4. allow for editing of reports. Probably need a history for this.
-5. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
-1. carpool?
+3. allow for editing of reports. Probably need a history for this.
+4. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
+5. carpool?
 
 # Test List:
 

@@ -216,18 +216,25 @@ app.post('/api/v1/releaseSpotFuture', (req, res) => {
   if (checkParams(res, req.body, ["stoken", "sid", "day"])) {
     if (isValidDate(new Date(req.body.day))) {
       verifyToken(res, 0, req.body.stoken, (user) => {
-        pool.query('SELECT * FROM schedule WHERE sid=$1 AND day=$2 AND action=$3', [req.body.sid, req.body.day, "release"], (err, DBres) => {
-          if (DBres.rows != null || DBres.rows[0] != null) {
-            res.status(400).send(error(101, "sid or day"))
+        pool.query('SELECT * FROM spots WHERE sid=$1', [req.body.sid], (err, DBres) => {
+          if (DBres.rows != null && DBres.rows[0] != null && DBres.rows[0].owner_email == user.email) {
+            pool.query('SELECT * FROM schedule WHERE sid=$1 AND day=$2 AND action=$3', [req.body.sid, req.body.day, "release"], (err, DBres) => {
+              if (DBres.rows != null || DBres.rows[0] != null) {
+                res.status(400).send(error(101, "sid or day"))
+                return;
+              }
+              pool.query('INSERT INTO schedule (EMAIL, SID, ACTION, DAY) VALUES ($1, $2, $3, $4)', [user.email, req.body.sid, "release", req.body.day], (err, DBres) => {
+                if (err) {
+                  res.status(400).send(error(107, JSON.stringify(err)))
+                } else {
+                  res.send(JSON.stringify({"msg":"success"}))
+                }
+              });
+            });
+          } else {
+            res.status(400).send(error(101, "sid"))
             return;
           }
-          pool.query('INSERT INTO schedule (EMAIL, SID, ACTION, DAY) VALUES ($1, $2, $3, $4)', [user.email, req.body.sid, "release", req.body.day], (err, DBres) => {
-            if (err) {
-              res.status(400).send(error(107, JSON.stringify(err)))
-            } else {
-              res.send(JSON.stringify({"msg":"success"}))
-            }
-          });
         });
       });
     } else {
@@ -632,13 +639,19 @@ function resetSpots() {
   pool.query('UPDATE spots SET CURRENT_EMAIL = OWNER_EMAIL', (err, DBres) => {
     dateObj = new Date()
     day = dateObj.getMonth()+"-"+dateObj.getDate()+"-"+dateObj.getFullYear()
-    pool.query('SELECT schedule WHERE day=$1', [day], (err, DBres) => {
-      if (DBres != null && DBres.rows != null) {
-        for (var i = 0; i < DBres.rows.length; i++) {
-          if (DBres.rows[i].action == "release") {
-            pool.query('UPDATE spots SET CURRENT_EMAIL = \'\', inuse=false WHERE ID=$1', [DBres.rows[i].sid]) // TODO: better SQL statement. Could prepare and do one rather then tons.
+    pool.query('SELECT schedule WHERE day=$1', [day], (err, DBresSCH) => {
+      if (!err) {
+        pool.query('SELECT * FROM spots', (err, DBresSPT) => {
+          if (!err) {
+            for (var i = 0; i < DBresSCH.rows.length; i++) {
+              for (var j = 0; j < DBresSPOT.rows.length; j++) {
+                if (DBresSPT.rows[j].owner_email == DBresSCH.rows[i].email && DBresSPOT.rows[j].id == DBresSCH.rows[i].sid && DBres.rows[i].action == "release") {
+                  pool.query('UPDATE spots SET CURRENT_EMAIL = \'\', inuse=false WHERE ID=$1', [DBres.rows[i].sid]) // TODO: better SQL statement. Could prepare and do one rather then tons.
+                }
+              }
+            }
           }
-        }
+        });
         pool.query('DELETE FROM schedule WHERE day=$1', [day])
       }
     });

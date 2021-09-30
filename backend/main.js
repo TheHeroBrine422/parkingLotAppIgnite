@@ -1,10 +1,13 @@
+const fs = require('fs')
 const { Pool } = require('pg')
 const express = require('express')
 const bodyParser = require('body-parser');
 const {OAuth2Client} = require('google-auth-library');
 
+settings = JSON.parse(fs.readFileSync("Settings.json"))
+
 port = 3000;
-CLIENT_ID = "nonexistance"
+CLIENT_ID = settings.CLIENT_ID
 sessionTokenLength = 64
 expirationTime = 30*24*60*60*1000 // 30 days
 devMode = true; // disable this in prod. commenting out the dev functions at the bottom is probably a good idea too just in case.
@@ -12,13 +15,7 @@ devMode = true; // disable this in prod. commenting out the dev functions at the
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const pool = new Pool({
-  user: 'jonescal',
-  host: 'localhost',
-  database: 'jonescal',
-  password: 'secretpassword',
-  port: 5432,
-})
+const pool = new Pool(settings.DBCreds)
 
 paramRegex = {"sid": /[0-9]*/,
               "stoken": /[a-zA-Z0-9]{64}/,

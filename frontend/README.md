@@ -3,4 +3,4 @@
 
 ### XSS:
 
-https://stackoverflow.com/questions/33644499/what-does-it-mean-when-they-say-react-is-xss-protected
+https://stackoverflow.com/a/51852579/5038158

@@ -15,7 +15,7 @@ Post requests are expecting form-data formatting.
 3. create library to access routes for testing software and frontend.
 4. make testing software using library
 5. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-6. change tokens to jwt and add refreshToken. Might also wanna start using authorization header rather then inserting it into post body/url params
+6. change tokens to jwt and add POST refreshToken route. Might also wanna start using authorization header rather then inserting it into post body/url params
 
 ### Other Potential Ideas
 

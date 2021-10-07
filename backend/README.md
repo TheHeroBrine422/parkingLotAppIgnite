@@ -15,7 +15,8 @@ Post requests are expecting form-data formatting.
 3. create library to access routes for testing software and frontend.
 4. make testing software using library
 5. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-6. change tokens to jwt and add POST refreshToken route. (express-jwt & jsonwebtoken npm) Might also wanna start using authorization header rather then inserting it into post body/url params.
+6. change tokens to jwt and add POST refreshToken route. (express-jwt & jsonwebtoken npm) Might also wanna start using authorization header rather then inserting it into post body/url params. Going to also need change POST revokeSessionToken since it will now need a blacklist of hashed tokens.
+7. check for race conditions
 
 ### Other Potential Ideas
 
@@ -24,6 +25,7 @@ Post requests are expecting form-data formatting.
 3. allow for editing of reports. Probably need a history for this.
 4. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
 5. carpool?
+7. remove db errors in err() cause too much info for hackers (SQL query). when i setup better logging, put it there.
 
 # Test List:
 

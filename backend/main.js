@@ -1,10 +1,14 @@
 const fs = require('fs')
 const { Pool } = require('pg')
 const express = require('express')
-const bodyParser = require('body-parser');
-const {OAuth2Client} = require('google-auth-library');
+const bodyParser = require('body-parser')
+const {OAuth2Client} = require('google-auth-library')
+const jwt = require('jsonwebtoken')
+const cookieParser = require("cookie-parser");
 
-settings = JSON.parse(fs.readFileSync("Settings.json"))
+settings = JSON.parse(fs.readFileSync("Settings.json", 'utf8'))
+privJWTKey = fs.readFileSync(settings.JWT.private, 'utf8')
+pubJWTKey = fs.readFileSync(settings.JWT.public, 'utf8')
 
 port = 3000;
 CLIENT_ID = settings.CLIENT_ID
@@ -14,6 +18,9 @@ devMode = true; // disable this in prod. commenting out the dev functions at the
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+const client = new OAuth2Client(settings.CLIENT_ID);
 
 const pool = new Pool(settings.DBCreds)
 
@@ -24,7 +31,8 @@ paramRegex = {"sid": /[0-9]*/,
               "access": /[0-3]{1}/,
               "note": /[^]*/,
               "rid": /[0-9]*/,
-              "gtoken": /[^]*/,
+              "credential": /[^]*/,
+              "g_csrf_token": /[0-9a-f]{16}/,
               "emails": /[a-z@0-9.\[\]\",]*/,
               "range": /[0-9\[\]\",]*/,
               "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
@@ -32,12 +40,13 @@ paramRegex = {"sid": /[0-9]*/,
 
 errors = {100: "Invalid Number of parameters.",
           101: "Invalid Parameter.",
-          102: "Invalid permissions.",
-          103: "Expired token",
+          102: "Invalid authorization.",
           104: "Spot in use.",
+          106: "Invalid csrf token",
           105: "User already has a spot.",
           107: "DB Error",
-          108: "Spot not in use."}
+          108: "Spot not in use.",
+          109: "Invalid google account."}
 
 function error(id, extra) {
   if (extra != null) {
@@ -65,34 +74,37 @@ function checkParams(res, params, paramList) {
 }
 
 function verifyToken(res, access, token, callback) {
-  if (token.length == sessionTokenLength) {
-    pool.query('SELECT * FROM tokens WHERE session_token=$1', [token], (err, DBres) => {
-      if (DBres.rows != null && DBres.rows[0] != null && DBres.rows[0].email != null) {
-        if (new Date(Number(DBres.rows[0].expiration)).getTime() > Date.now()) {
-          pool.query('SELECT * FROM users WHERE email=$1', [DBres.rows[0].email], (err, DBres) => {
-            if (DBres.rows != null && DBres.rows[0] != null) {
-              if (DBres.rows[0].access < access) {
-                res.status(400).send(error(102))
-                return;
-              }
-              callback(DBres.rows[0])
+  console.log(token)
+  if (token != null && token != "") {
+    token = token.split(" ")[1]
+      if (token != null && token != "") {
+      regexTest = token.match(/[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*/)
+      console.log(regexTest)
+      if (token == regexTest[0]) {
+        jwtObj = jwt.verify(token, pubJWTKey, { algorithms: settings.JWT.algo})
+        pool.query('SELECT * FROM users WHERE email=$1', [jwtObj.email], (err, DBres) => {
+          if (err) {
+            res.status(400).send(error(107, DBres))
+          } else {
+            if (DBres.rows == null || DBres.rows[0] == null) {
+              res.status(401).send(error(102))
             } else {
-              res.status(400).send(error(101, "stoken"))
-              return;
+              if (DBres.rows[0].access < access) {
+                res.status(401).send(error(102))
+              } else {
+                callback(DBres.rows[0])
+              }
             }
-          });
-        } else {
-          res.status(400).send(error(103))
-          return;
-        }
+          }
+        });
       } else {
-        res.status(400).send(error(101, "stoken"))
-        return;
+        res.status(401).send(error(102))
       }
-    });
+    } else {
+      res.status(401).send(error(102))
+    }
   } else {
-    res.status(400).send(error(101, "stoken"))
-    return;
+    res.status(401).send(error(102))
   }
 }
 
@@ -106,8 +118,8 @@ function genSessionToken() {
 }
 
 app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user data too.
-  if (checkParams(res, req.query, ["stoken"])) {
-    verifyToken(res, 0, req.query.stoken, (user) => {
+  if (checkParams(res, req.query, [])) {
+    verifyToken(res, 0, req.headers.authorization, (user) => {
       pool.query('SELECT * FROM spots', (err, DBres) => {
         endObj = {"spots":DBres.rows, "users":[]}
         query = "SELECT email, name, license_plate FROM users WHERE email=$1"
@@ -455,19 +467,28 @@ app.get('/api/v1/getReports', (req, res) => { // Fields: [token]
   }
 });
 
-app.get('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID to write this: https://developers.google.com/identity/sign-in/web/backend-auth and https://developers.google.com/identity/sign-in/web/sign-in
-  if (checkParams(res, req.query, ["gtoken"])) {
-    const ticket = await client.verifyIdToken({
-        idToken: req.query.gtoken,
-        audience: CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
-        // Or, if multiple clients access the backend:
-        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
-    });
-    const payload = ticket.getPayload();
-    const userid = payload['sub'];
-    // If request specified a G Suite domain:
-    // const domain = payload['hd'];
-    res.send("WIP")
+app.post('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID to write this: https://developers.google.com/identity/sign-in/web/backend-auth and https://developers.google.com/identity/sign-in/web/sign-in
+  if (checkParams(res, req.body, ["credential", "g_csrf_token"])) {
+    if (req.body.g_csrf_token == req.cookies.g_csrf_token) {
+      const ticket = await client.verifyIdToken({
+          idToken: req.body.credential,
+          audience: settings.CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+          // Or, if multiple clients access the backend:
+          //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+      });
+      const payload = ticket.getPayload();
+      const userid = payload['sub'];
+
+      console.log(payload)
+      if (payload['hd'] == "bentonvillek12.org") {
+        token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
+        res.send(token)
+      } else {
+        res.status(400).send(error(109))
+      }
+    } else {
+      res.status(400).send(error(106))
+    }
   }
 });
 
@@ -624,6 +645,20 @@ if (devMode) { // this stuff should probably be completely commented out for sec
         resetSpots()
       });
     }
+  });
+
+  app.get('/googleSigninTest', (req, res) => { // i really should just use a real webserver.
+    console.log(req.url);
+    fs.readFile("googleSigninTest.html", (err, data) => {
+      res.send(data.toString());
+    });
+  });
+
+  app.get('/test', (req, res) => { // i really should just use a real webserver.
+    console.log(req.url);
+    fs.readFile("testPost.html", (err, data) => {
+      res.send(data.toString());
+    });
   });
 }
 

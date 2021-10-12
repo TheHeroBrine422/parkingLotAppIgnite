@@ -1,4 +1,4 @@
-DROP TABLE spots, users, reports, tokens, ranges, schedule;
+DROP TABLE spots, users, reports, revokedTokens, ranges, schedule;
 
 CREATE TABLE spots(
   ID SERIAL PRIMARY KEY,
@@ -24,10 +24,8 @@ CREATE TABLE reports(
   CREATION_DATE TEXT
 );
 
-CREATE TABLE tokens(
-  SESSION_TOKEN TEXT PRIMARY KEY,
-  EMAIL TEXT,
-  EXPIRATION TEXT
+CREATE TABLE revokedTokens(
+  TOKEN_HASH TEXT PRIMARY KEY
 );
 
 CREATE TABLE ranges(
@@ -37,12 +35,12 @@ CREATE TABLE ranges(
 
 CREATE TABLE schedule(
   ID SERIAL PRIMARY KEY,
-  EMAIL TEXT
+  EMAIL TEXT,
   SID TEXT,
   ACTION TEXT,
   DAY TEXT
 );
 
-INSERT INTO spots (NUM, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES (1, 'AM', 'jonescal@bentonvillek12.org', true, 'jonescal@bentonvillek12.org');
+INSERT INTO spots (NAME, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES ('AM 1', 'jonescal@bentonvillek12.org', true, 'jonescal@bentonvillek12.org');
 INSERT INTO users VALUES ('jonescal@bentonvillek12.org', 3, 'Caleb Jones', '123ABC');
 INSERT INTO users VALUES ('abc@bentonvillek12.org', 2, 'ABC Jones', '124ABC');

@@ -4,7 +4,7 @@ Backend server for parkingLotAppIgnite
 
 HTTP based api connected to postgres DB server using express and nodejs.
 
-Overall API url: localhost:3000/api/v1/{route}
+Overall API url: {url}:3000/api/v1/{route}
 
 Post requests are expecting form-data formatting.
 
@@ -17,6 +17,7 @@ Post requests are expecting form-data formatting.
 5. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 6. change tokens to jwt and add POST refreshToken route. (express-jwt & jsonwebtoken npm) Might also wanna start using authorization header rather then inserting it into post body/url params. Going to also need change POST revokeSessionToken since it will now need a blacklist of hashed tokens.
 7. check for race conditions
+8. Add/remove spot route for level 2+
 
 ### Other Potential Ideas
 
@@ -25,7 +26,27 @@ Post requests are expecting form-data formatting.
 3. allow for editing of reports. Probably need a history for this.
 4. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
 5. carpool?
-7. remove db errors in err() cause too much info for hackers (SQL query). when i setup better logging, put it there.
+7. remove db errors in err() cause too much info (SQL query). when i setup better logging, put it there so it will only be accessible to the devloper. Might want to add a route for devs to access logs
+8. probably should implement csrf protection
+
+# JWT User Object
+
+```json
+{
+  "email":"abc@bentonvillek12.org",
+}
+```
+
+Only thing it needs is email. If you want more data use GET getUser
+
+JWT probably isnt needed but im gonna use it anyway.
+
+# Key gen:
+openssl ecparam -name prime256v1 -genkey -noout -out private-key.pem
+
+openssl ec -in private-key.pem -pubout -out public-key.pem
+
+Algo: ES512
 
 # Test List:
 

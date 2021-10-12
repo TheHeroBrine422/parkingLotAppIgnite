@@ -11,6 +11,22 @@
     <button>releaseSpot</button>
   </div>
 </form>
+<button onclick="getLot()">getLot</button>
+
+<p id="output"></p>
+
+<script>
+  function getLot() {
+    const token = 'eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvbmVzY2FsQGJlbnRvbnZpbGxlazEyLm9yZyIsImlhdCI6MTYzNDA1MDQzMn0.AOGUmy02RWWQT-GikS3l7Yq7BHJrqxzRaeqHXobpLRXSUJbUqgb_RgeuyNvYf05E0uNEQ0DwAeg1aVuaOdfm6S3vAHWzqk6qI1SzK8ofoqtsxZwrOCFmXfwi8Za2ahpBtgrjzngIsqpjudZSDzoZnZd9TMv4CDct_mjRegzDyxjmJsIM';
+    fetch('http://localhost:3000/api/v1/getLot', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(json => document.getElementById("output").innerHTML = JSON.stringify(json));
+  }
+</script>
 
 <form action="http://localhost:3000/api/v1/takeSpot" method="POST">
   <div>

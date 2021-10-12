@@ -8,26 +8,38 @@ Overall API url: {url}:3000/api/v1/{route}
 
 Post requests are expecting form-data formatting.
 
+Authentication is done through the Authentication header, which expects `Bearer {JWT}`
+
+# Install:
+
+1. Install Postgres
+2. Run `npm i`
+3. Generate JWT signing keys. (openssl)
+4. Configure Settings.json (make a copy of SettingsEx.json and rename it)
+5. Run `node main.js`
+
 # Todo list (not prioritized)
 
 1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
-2. google stuff (waiting on district for access)
-3. create library to access routes for testing software and frontend.
-4. make testing software using library
-5. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-6. change tokens to jwt and add POST refreshToken route. (express-jwt & jsonwebtoken npm) Might also wanna start using authorization header rather then inserting it into post body/url params. Going to also need change POST revokeSessionToken since it will now need a blacklist of hashed tokens.
-7. check for race conditions
-8. Add/remove spot route for level 2+
+2. create library to access routes for testing software and frontend.
+3. make testing software using library
+4. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
+5. update POST revokeSessionToken since it will now need a blacklist of hashed tokens, and add checks of revoked tokens in verifyToken
+6. check for race conditions
+7. Add/remove spot route for level 2+
+8. regen keys for prod to revoke tokens accidently put in public repo. Not a big deal till being ran publically.
+9. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
 
 ### Other Potential Ideas
 
-1. deleteAccount - delete reports. unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
+1. deleteAccount Should it delete reports? unsure if this is a good idea due to reports still being valid, user just no longer existing. maybe allow user to decide if they get deleted.
 2. remove console.logs - probably need to replace with some kind of proper logging. Probably need to find a library for that. (winston)
 3. allow for editing of reports. Probably need a history for this.
 4. mass unassignSpots. Technically not needed but sending 100 http requests at once probably isnt the best idea. Although it probably won't cause a issue either.
 5. carpool?
-7. remove db errors in err() cause too much info (SQL query). when i setup better logging, put it there so it will only be accessible to the devloper. Might want to add a route for devs to access logs
-8. probably should implement csrf protection
+6. remove db errors in err() cause too much info (SQL query). when i setup better logging, put it there so it will only be accessible to the devloper. Might want to add a route for devs to access logs
+7. probably should implement csrf protection
+8. make checkParams and verifyToken express middleware rather then just functions ran on each route. I really want to do this for learning reasons, but it will require a refactor and isn't really that important.
 
 # JWT User Object
 

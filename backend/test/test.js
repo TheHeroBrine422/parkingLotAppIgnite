@@ -1,7 +1,7 @@
 const axios = require('axios')
 
 APIURL = "http://localhost:3000/api/v1/";
-JWT = 'jeyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvbmVzY2FsQGJlbnRvbnZpbGxlazEyLm9yZyIsImlhdCI6MTYzNDA1OTYyM30.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALz_BYwoUM-KaVwFE20EUMR2543UR44Ur2qMJlffmu_zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFeKJc-HggEayFsyRvnOQ0PMc6gf50SE7iYm0_JdwpA-';
+JWT = '';
 
 (async () => {
   //res = await get("getSessionTokenInsecureDev", {"email":"jonescal@bentonvillek12.org"})

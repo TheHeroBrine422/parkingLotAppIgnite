@@ -12,7 +12,6 @@ pubJWTKey = fs.readFileSync(settings.JWT.public, 'utf8')
 
 port = 3000;
 CLIENT_ID = settings.CLIENT_ID
-sessionTokenLength = 64
 expirationTime = 30*24*60*60*1000 // 30 days
 devMode = true; // disable this in prod. commenting out the dev functions at the bottom is probably a good idea too just in case.
 
@@ -118,15 +117,6 @@ function verifyToken(res, access, token, callback) {
   } else {
     res.status(401).send(error(102))
   }
-}
-
-function genSessionToken() {
-  charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  token = ""
-  for (var i = 0; i < sessionTokenLength; i++) {
-    token += charSet.charAt(Math.floor(Math.random()*charSet.length))
-  }
-  return token;
 }
 
 app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user data too.
@@ -662,14 +652,14 @@ if (devMode) { // this stuff should probably be completely commented out for sec
 
   app.get('/googleSigninTest', (req, res) => { // i really should just use a real webserver.
     console.log(req.url);
-    fs.readFile("/home/caleb/Code/parkingLotAppIgnite/backend/googleSignInTest.html", (err, data) => {
+    fs.readFile("test/HTML/googleSignInTest.html", (err, data) => {
       res.send(data.toString());
     });
   });
 
   app.get('/test', (req, res) => { // i really should just use a real webserver.
     console.log(req.url);
-    fs.readFile("/home/caleb/Code/parkingLotAppIgnite/backend/testPost.html", (err, data) => {
+    fs.readFile("test/HTML/testPost.html", (err, data) => {
       res.send(data.toString());
     });
   });

@@ -42,9 +42,9 @@ Only thing it needs is email. If you want more data use GET getUser
 JWT probably isnt needed but im gonna use it anyway.
 
 # Key gen:
-openssl ecparam -name prime256v1 -genkey -noout -out private-key.pem
+openssl ecparam -name prime256v1 -genkey -noout -out ec512-private.pem
 
-openssl ec -in private-key.pem -pubout -out public-key.pem
+openssl ec -in ec512-private.pem -pubout -out ec512-public.pem
 
 Algo: ES512
 

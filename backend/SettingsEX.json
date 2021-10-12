@@ -8,8 +8,8 @@
     "port": 5432
   },
   "JWT": {
-    "public": "keys/id_ecdsa.pub",
-    "private": "keys/id_ecdsa",
+    "public": "keys/ec512-public.pem",
+    "private": "keys/ec512-private.pem",
     "algo": "ES512"
   }
 }

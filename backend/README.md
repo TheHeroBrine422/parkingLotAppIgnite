@@ -29,6 +29,8 @@ Authentication is done through the Authentication header, which expects `Bearer 
 7. Add/remove spot route for level 2+
 8. regen keys for prod to revoke tokens accidently put in public repo. Not a big deal till being ran publically.
 9. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
+10. add checks that tables exist and create them if needed in app.listen()
+11. rewrite getArbitraryJWT for testing purposes.
 
 ### Other Potential Ideas
 
@@ -60,51 +62,30 @@ openssl ec -in ec512-private.pem -pubout -out ec512-public.pem
 
 Algo: ES512
 
-# Test List:
+# Route List List:
 
-* [x] GET getLot
-* [x] GET getAllUsers
-* [x] POST takeSpot
-* [ ] POST setLicensePlate
-* [x] POST releaseSpot
-* [x] GET getUser
-* [ ] GET getUserByPlate
-* [x] GET getUsers
-* [ ] POST assignSpot
-* [ ] POST createBlankUser
-* [ ] POST createUserAdmin (DEV)
-* [ ] POST createReport
-* [ ] POST deleteReport
-* [ ] GET getReports
-* [ ] GET getSessionTokenGoogle
-* [ ] GET getSessionTokenInsecureDev (DEV)
-* [ ] POST revokeSessionToken
-* [ ] POST setAccess
-* [ ] POST deleteAccount
-* [ ] POST unassignSpot
-
-# Documentation List:
-
-* [x] GET getLot
-* [ ] GET getAllUsers
-* [ ] POST takeSpot
-* [ ] POST setLicensePlate
-* [ ] POST releaseSpot
-* [ ] GET getUser
-* [ ] GET getUserByPlate
-* [ ] GET getUsers
-* [ ] POST assignSpot
-* [ ] POST createBlankUser
-* [ ] POST createUserAdmin (DEV)
-* [ ] POST createReport
-* [ ] POST deleteReport
-* [ ] GET getReports
-* [ ] GET getSessionTokenGoogle
-* [ ] GET getSessionTokenInsecureDev (DEV)
-* [ ] POST revokeSessionToken
-* [ ] POST setAccess
-* [ ] POST deleteAccount
-* [ ] POST unassignSpot
+| Route | Tested | Documented | Added to AutoTest (test/test.js) | DEV ONLY |
+| ----- | ----- | ----- | ----- | ----- |
+| GET getLot | :x: | :heavy_check_mark: | | |
+| GET getAllUsers
+| POST takeSpot
+| POST setLicensePlate
+| POST releaseSpot
+| GET getUser
+| GET getUserByPlate
+| GET getUsers
+| POST assignSpot
+| POST createBlankUser
+| POST createUserAdmin (DEV)
+| POST createReport
+| POST deleteReport
+| GET getReports
+| GET getSessionTokenGoogle
+| GET getSessionTokenInsecureDev (DEV)
+| POST revokeSessionToken
+| POST setAccess
+| POST deleteAccount
+| POST unassignSpot
 
 # Possible Parameters
 | Parameter | Information | regex |

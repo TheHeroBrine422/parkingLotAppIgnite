@@ -665,11 +665,38 @@ if (devMode) { // this stuff should probably be completely commented out for sec
       res.send(data.toString());
     });
   });
+
+  app.get('/api/v1/resetDB', (req, res) => {
+    if (checkParams(res, req.query, [])) {
+      verifyToken(res, 3, req.headers.authorization, (user) => {
+        resetDB()
+      });
+    }
+  });
 }
 
 app.listen(port, () => {
   console.log(`Started server at http://localhost:${port}!`)
   setTimeout(resetSpots, calcTimeResetSpots())
+  pool.query('SELECT * FROM pg_catalog.pg_tables WHERE schemaname != \'information_schema\' AND schemaname != \'pg_catalog\'', (err, DBres) => {
+    tableList = ["spots", "users", "reports", "revokedtokens", "ranges", "schedule"]
+    if (DBres.rows.length == tableList.length) {
+      goodRows = 0
+      for (var i = 0; i < DBres.rows.length; i++) {
+        for (var i = 0; i < tableList.length; i++) {
+          if (DBres.rows[i].tablename == tableList[i]) {
+            break;
+            goodRows++;
+          }
+        }
+      }
+      if (goodRows != DBres.rows.length) {
+        resetDB()
+      }
+    } else {
+      resetDB()
+    }
+  });
 });
 
 function resetSpots() {
@@ -694,6 +721,10 @@ function resetSpots() {
     });
   });
   setTimeout(resetSpots, calcTimeResetSpots())
+}
+
+function resetDB() {
+
 }
 
 function calcTimeResetSpots() {

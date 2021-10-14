@@ -20,7 +20,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 
 # Todo list (not prioritized)
 
-1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS. Also write testing using jest in test/test.js
+1. TEST AND DOCUMENT. For testing, I am no longer doing it manually, and just writing testing using jest cause I need to do it anyway and most things need a lot of testing. Will do documentation after everything works.
 2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 3. check for race conditions
 4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
@@ -80,9 +80,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | POST removeRange | :heavy_check_mark: | :x: | :x: | :x:
 | GET getRanges | :x: | :x: | :x: | :x:
 | GET forceResetSpots | :heavy_check_mark: | :x: | :x: | :x:
-
-
-
+| GET resetDB | :heavy_check_mark: | :x: | :x: | :x:
 
 # JWT User Object
 

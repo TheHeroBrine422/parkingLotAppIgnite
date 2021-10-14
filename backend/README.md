@@ -20,17 +20,20 @@ Authentication is done through the Authentication header, which expects `Bearer 
 
 # Todo list (not prioritized)
 
-1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS.
-2. create library to access routes for testing software and frontend.
-3. make testing software using library
-4. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-5. update POST revokeSessionToken since it will now need a blacklist of hashed tokens, and add checks of revoked tokens in verifyToken
-6. check for race conditions
-7. Add/remove spot route for level 2+
-8. regen keys for prod to revoke tokens accidently put in public repo. Not a big deal till being ran publically.
-9. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
-10. add checks that tables exist and create them if needed in app.listen()
-11. rewrite getArbitraryJWT for testing purposes.
+1. TEST EVERYTHING AND WRITE DOCUMENTATION. SOMETHINGS HAVE BEEN TESTED BUT I HAVENT KEPT TRACK AND IDK WHAT ACTUALLY WORKS. Also write testing using jest in test/test.js
+2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
+3. check for race conditions
+4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
+5. add checks that tables exist and create them if needed in app.listen(). Could also do this with JWT keys maybe.
+6. create New Routes
+  * add/remove spot for 2+
+  * getRanges
+  * fix revokeSessionToken for JWTs
+  * createArbitraryUser for 3 dev only for testing
+
+# release Checklist:
+
+1. make sure to regen keys due to token leaks.
 
 ### Other Potential Ideas
 
@@ -42,6 +45,44 @@ Authentication is done through the Authentication header, which expects `Bearer 
 6. remove db errors in err() cause too much info (SQL query). when i setup better logging, put it there so it will only be accessible to the devloper. Might want to add a route for devs to access logs
 7. probably should implement csrf protection
 8. make checkParams and verifyToken express middleware rather then just functions ran on each route. I really want to do this for learning reasons, but it will require a refactor and isn't really that important.
+
+# Route To-Do List:
+
+? means in progress.
+
+| Route | Implemented | Tested | Documented | Added to AutoTest (test/test.js) |
+| ----- | ----- | ----- | ----- | ----- |
+| GET getLot | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
+| GET getAllUsers | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
+| POST takeSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST setLicensePlate | :heavy_check_mark: | :x: | :x: | :x:
+| POST releaseSpot | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
+| GET getUser | :heavy_check_mark: | :x: | :x: | :x: |
+| GET getUserByPlate | :heavy_check_mark: | :x: | :x: | :x:
+| GET getUsers | :heavy_check_mark: | | :x: | :x:
+| POST assignSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST createBlankUser | :heavy_check_mark: | :x: | :x: | :x:
+| POST createReport | :heavy_check_mark: | :x: | :x: | :x:
+| POST deleteReport | :heavy_check_mark: | :x: | :x: | :x:
+| GET getReports | :heavy_check_mark: | :x: | :x: | :x:
+| POST getSessionTokenGoogle | :heavy_check_mark: | :x: | :x: | :x:
+| POST createArbitraryUser | :x: | :x: | :x: | :x:
+| POST revokeSessionToken | :x: | :x: | :x: | :x:
+| POST setAccess | :heavy_check_mark: | :x: | :x: | :x:
+| POST deleteAccount | :heavy_check_mark: | :x: | :x: | :x:
+| POST unassignSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST createSpot | :x: | :x: | :x: | :x:
+| POST deleteSpot | :x: | :x: | :x: | :x:
+| GET getSchedule | :heavy_check_mark: | :x: | :x: | :x:
+| POST releaseSpotFuture | :heavy_check_mark: | :x: | :x: | :x:
+| POST removeFutureReleasedSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST assignRange | :heavy_check_mark: | :x: | :x: | :x:
+| POST removeRange | :heavy_check_mark: | :x: | :x: | :x:
+| GET getRanges | :x: | :x: | :x: | :x:
+| GET forceResetSpots | :heavy_check_mark: | :x: | :x: | :x:
+
+
+
 
 # JWT User Object
 
@@ -62,32 +103,7 @@ openssl ec -in ec512-private.pem -pubout -out ec512-public.pem
 
 Algo: ES512
 
-# Route List List:
-
-| Route | Tested | Documented | Added to AutoTest (test/test.js) | DEV ONLY |
-| ----- | ----- | ----- | ----- | ----- |
-| GET getLot | :x: | :heavy_check_mark: | | |
-| GET getAllUsers
-| POST takeSpot
-| POST setLicensePlate
-| POST releaseSpot
-| GET getUser
-| GET getUserByPlate
-| GET getUsers
-| POST assignSpot
-| POST createBlankUser
-| POST createUserAdmin (DEV)
-| POST createReport
-| POST deleteReport
-| GET getReports
-| GET getSessionTokenGoogle
-| GET getSessionTokenInsecureDev (DEV)
-| POST revokeSessionToken
-| POST setAccess
-| POST deleteAccount
-| POST unassignSpot
-
-# Possible Parameters
+# Possible Parameters OUT OF DATE
 | Parameter | Information | regex |
 | --------- | ----------- | ----- |
 | stoken | Session Token. 64 char  | [a-zA-Z0-9]{64} |

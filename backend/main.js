@@ -41,7 +41,7 @@ paramRegex = {"sid": /[0-9]*/,
               "credential": /[^]*/,
               "g_csrf_token": /[0-9a-f]{16}/,
               "emails": /[a-z@0-9.\[\]\",]*/,
-              "range": /[0-9\[\]\",]*/,
+              "range": /\[[0-9]*, [0-9]*\]/,
               "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
               "schid": /[0-9]*/}
 
@@ -371,7 +371,8 @@ app.post('/api/v1/assignSpot', (req, res) => {
           res.status(400).send(error(107, JSON.stringify(err)))
           return;
         }
-        if (DBres.rows != null || DBres.rows[0] == null || JSON.parse(DBres.rows[0].range).indexOf(Number(req.body.sid)) < 0) {
+        range = JSON.parse(DBres.rows[0].range)
+        if (DBres.rows != null || DBres.rows[0] == null || range[0] > req.body.sid || range[1] < req.body.sid) {
           res.status(400).send(error(102))
           return;
         }
@@ -395,7 +396,8 @@ app.post('/api/v1/unassignSpot', (req, res) => {
           res.status(400).send(error(107, JSON.stringify(err)))
           return;
         }
-        if (DBres.rows != null || DBres.rows[0] == null || JSON.parse(DBres.rows[0].range).indexOf(Number(req.body.sid)) < 0) {
+        range = JSON.parse(DBres.rows[0].range)
+        if (DBres.rows != null || DBres.rows[0] == null || range[0] > req.body.sid || range[1] < req.body.sid) {
           res.status(400).send(error(102))
           return;
         }
@@ -469,7 +471,7 @@ app.get('/api/v1/getReports', (req, res) => { // Fields: [token]
   }
 });
 
-app.post('/api/v1/getSessionTokenGoogle', async (req, res) => { // need clientID to write this: https://developers.google.com/identity/sign-in/web/backend-auth and https://developers.google.com/identity/sign-in/web/sign-in
+app.post('/api/v1/getSessionTokenGoogle', async (req, res) => {
   if (checkParams(res, req.body, ["credential", "g_csrf_token"])) {
     if (req.body.g_csrf_token == req.cookies.g_csrf_token) {
       const ticket = await client.verifyIdToken({
@@ -523,34 +525,34 @@ app.post('/api/v1/setAccess', (req, res) => {
 app.post('/api/v1/assignRange', (req, res) => {
   if (checkParams(res, req.body, ["email", "range"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
-      pool.query('SELECT * FROM ranges WHERE email=$1', [req.body.email], (err, DBres) => {
-        if (DBres.rows == null || DBres.rows[0] == null) {
-          try {
-            range = JSON.parse(req.body.range)
-            if (range != null) {
+      try {
+        range = JSON.parse(req.body.range)
+        if (range != null && range[0] < range[1]) {
+          pool.query('SELECT * FROM ranges WHERE email=$1', [req.body.email], (err, DBres) => {
+            if (DBres.rows == null || DBres.rows[0] == null) {
               pool.query('INSERT INTO ranges (EMAIL, RANGE) VALUES ($1, $2)', [req.body.email, req.body.range, req.query.email.split("@")[0], exp], (err, DBres) => {
                 if (err) {
                   res.status(400).send(error(107, JSON.stringify(err)))
                 } else {
-                  res.send(JSON.stringify({"token": sToken, "exp": exp}))
+                  res.send(JSON.stringify({"msg": "success"}))
                 }
               });
             } else {
-              res.status(400).send(101, range)
-            }
-          } catch {
-            res.status(400).send(101, range)
-          }
-        } else {
-          pool.query('UPDATE range SET range=$2 WHERE email=$1', [req.query.email, req.body.range], (err, DBres) => {
-            if (err) {
-              res.status(400).send(error(107, JSON.stringify(err)))
-            } else {
-              res.send(JSON.stringify({"token": sToken, "exp": exp}))
+              pool.query('UPDATE range SET range=$2 WHERE email=$1', [req.query.email, req.body.range], (err, DBres) => {
+                if (err) {
+                  res.status(400).send(error(107, JSON.stringify(err)))
+                } else {
+                  res.send(JSON.stringify({"msg": "success"}))
+                }
+              });
             }
           });
+        } else {
+          res.status(400).send(101, range)
         }
-      });
+      } catch {
+        res.status(400).send(101, range)
+      }
     });
   }
 });
@@ -558,7 +560,7 @@ app.post('/api/v1/assignRange', (req, res) => {
 app.post('/api/v1/revokeRange', (req, res) => {
   if (checkParams(res, req.body, ["email"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
-      pool.query('DELETE FROM range WHERE email=$1', [user.email], (err, DBres) => {
+      pool.query('DELETE FROM range WHERE email=$1', [req.body.email], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
@@ -595,7 +597,7 @@ app.post('/api/v1/deleteAccount', (req, res) => {
 });
 
 if (devMode) { // this stuff should probably be completely commented out for security reasons in prod.
-  app.get('/api/v1/getArbitraryJWT', (req, res) => {
+  app.post('/api/v1/createArbitraryUser', (req, res) => {
     if (checkParams(res, req.query, ["email"])) {
       res.send(JSON.stringify({"msg": "WIP/TODO"}))
       /*pool.query('SELECT * FROM users WHERE EMAIL=$1', [req.query.email], (err, DBres) => {
@@ -622,23 +624,23 @@ if (devMode) { // this stuff should probably be completely commented out for sec
             }
           });
         }
-      });*/
-    }
-  });
-
-  app.post('/api/v1/createUserAdmin', (req, res) => { // mostly intended for testing.
-    console.log(req.url);
-    if (checkParams(res, req.body, ["email", "access", "name", "license_plate"])) {
-      verifyToken(res, 2, req.headers.authorization, (user) => {
-        sToken = genSessionToken()
-        pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME, LICENSE_PLATE) VALUES ($1, $2, $3, $4, $5)', [sToken, req.body.email, req.body.access, req.body.name, req.body.license_plate], (err, DBres) => {
-          if (err) {
-            res.status(400).send(error(107, JSON.stringify(err)))
-          } else {
-            res.send(JSON.stringify({"msg":sToken}))
-          }
-        });
       });
+
+      app.post('/api/v1/createUserAdmin', (req, res) => { // mostly intended for testing.
+        console.log(req.url);
+        if (checkParams(res, req.body, ["email", "access", "name", "license_plate"])) {
+          verifyToken(res, 2, req.headers.authorization, (user) => {
+            sToken = genSessionToken()
+            pool.query('INSERT INTO users (SESSION_TOKEN, EMAIL, ACCESS, NAME, LICENSE_PLATE) VALUES ($1, $2, $3, $4, $5)', [sToken, req.body.email, req.body.access, req.body.name, req.body.license_plate], (err, DBres) => {
+              if (err) {
+                res.status(400).send(error(107, JSON.stringify(err)))
+              } else {
+                res.send(JSON.stringify({"msg":sToken}))
+              }
+            });
+          });
+        }
+      });*/
     }
   });
 

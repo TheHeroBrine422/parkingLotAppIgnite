@@ -2,8 +2,15 @@ const axios = require('axios')
 const fs = require('fs')
 
 APIURL = "http://localhost:3000/api/v1/";
-JWTs = {"3": JSON.parse(fs.readFileSync("../Settings.json")).DevTestJWT};
+JWTs = {"3": JSON.parse(fs.readFileSync("/home/caleb/Code/parkingLotAppIgnite/backend/Settings.json")).DevTestJWT};
 
+test('spot 0 owner is jonescal@bentonvillek12.org', async () => {
+  res = await get("getLot", {}, JWTs["3"])
+
+  expect(res.data.spots[0].owner_email).toBe("jonescal@bentonvillek12.org");
+});
+
+/*
 (async () => {
   //res = await get("getSessionTokenInsecureDev", {"email":"jonescal@bentonvillek12.org"})
   //console.log(res.data)
@@ -27,6 +34,7 @@ JWTs = {"3": JSON.parse(fs.readFileSync("../Settings.json")).DevTestJWT};
   //res = await get("getUsers", {"emails": JSON.stringify(["jonescal@bentonvillek12.org", "abc@bentonvillek12.org"])})
   //console.log(res.data)
 })();
+*/
 
 async function get(route, params, JWT) {
   return await axios.get(APIURL+route, {params: params, headers: {authorization: "Bearer "+JWT}})

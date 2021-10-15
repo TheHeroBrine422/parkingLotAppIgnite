@@ -41,7 +41,7 @@ paramRegex = {"sid": /[0-9]*/,
               "credential": /[^]*/,
               "g_csrf_token": /[0-9a-f]{16}/,
               "emails": /[a-z@0-9.\[\]\",]*/,
-              "range": /\[[0-9]*, [0-9]*\]/,
+              "range": /\[[0-9]*,[0-9]*\]/,
               "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
               "schid": /[0-9]*/,
               "name": /[a-zA-Z 0-9]*/}
@@ -69,11 +69,14 @@ function isValidDate(d) {
 
 function checkParams(res, params, paramList) {
   if (Object.keys(params).length != paramList.length) {
+    console.log(2)
     res.status(400).send(error(100))
     return false;
   }
   for (var i = 0; i < paramList.length; i++) {
     if (params[paramList[i]] == null || params[paramList[i]] == "" || params[paramList[i]].match(paramRegex[paramList[i]]) == null || params[paramList[i]].match(paramRegex[paramList[i]])[0] != params[paramList[i]]) {
+      console.log(params[paramList[i]])
+      console.log(3)
       res.status(400).send(error(101,paramList[i]))
       return false;
     }
@@ -86,7 +89,7 @@ function verifyToken(res, access, token, callback) {
     token = token.split(" ")[1] // remove bearer
     if (token != null && token != "") {
       regexTest = token.match(/[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*/)
-      if (token == regexTest[0]) {
+      if (regexTest != null && token == regexTest[0]) {
         try { // deal with error from invalid tokens
           jwtObj = jwt.verify(token, pubJWTKey, { algorithms: settings.JWT.algo})
         } catch {
@@ -389,8 +392,12 @@ app.post('/api/v1/assignSpot', (req, res) => {
           res.status(400).send(error(107, JSON.stringify(err)))
           return;
         }
+        if (DBres.rows == null || DBres.rows[0] == null) {
+          res.status(400).send(error(102))
+          return;
+        }
         range = JSON.parse(DBres.rows[0].range)
-        if (DBres.rows != null || DBres.rows[0] == null || range[0] > req.body.sid || range[1] < req.body.sid) {
+        if (range[0] > req.body.sid || range[1] < req.body.sid) {
           res.status(400).send(error(102))
           return;
         }
@@ -550,7 +557,7 @@ app.post('/api/v1/assignRange', (req, res) => {
         if (range != null && range[0] < range[1]) {
           pool.query('SELECT * FROM ranges WHERE email=$1', [req.body.email], (err, DBres) => {
             if (DBres.rows == null || DBres.rows[0] == null) {
-              pool.query('INSERT INTO ranges (EMAIL, RANGE) VALUES ($1, $2)', [req.body.email, req.body.range, req.query.email.split("@")[0], exp], (err, DBres) => {
+              pool.query('INSERT INTO ranges (EMAIL, RANGE) VALUES ($1, $2)', [req.body.email, req.body.range], (err, DBres) => {
                 if (err) {
                   console.log(err)
                   res.status(400).send(error(107, JSON.stringify(err)))
@@ -572,9 +579,11 @@ app.post('/api/v1/assignRange', (req, res) => {
           });
         } else {
           res.status(400).send(101, range)
+          console.log(1)
         }
       } catch {
         res.status(400).send(101, range)
+        console.log(0)
       }
     });
   }

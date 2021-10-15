@@ -21,6 +21,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 # Todo list (not prioritized)
 
 1. TEST AND DOCUMENT. For testing, I am no longer doing it manually, and just writing testing using jest cause I need to do it anyway and most things need a lot of testing. Will do documentation after everything works.
+  * remember to remove debug console.logs when finished writing testing code
 2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 3. check for race conditions
 4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
@@ -31,6 +32,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 6. create New Routes
   * fix revokeToken for JWTs
 10. add expiration to JWT
+11. i dont think scheduling works properly for teachers.
 
 # release Checklist:
 
@@ -54,8 +56,8 @@ Authentication is done through the Authentication header, which expects `Bearer 
 
 | Route | Implemented | Tested | Documented | Added to AutoTest (test/test.js) |
 | ----- | ----- | ----- | ----- | ----- |
-| GET getLot | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
-| GET getAllUsers | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
+| GET getLot | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
+| GET getAllUsers | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
 | POST takeSpot | :heavy_check_mark: | :x: | :x: | :x:
 | POST setLicensePlate | :heavy_check_mark: | :x: | :x: | :x:
 | POST releaseSpot | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
@@ -67,7 +69,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | POST createReport | :heavy_check_mark: | :x: | :x: | :x:
 | POST deleteReport | :heavy_check_mark: | :x: | :x: | :x:
 | GET getReports | :heavy_check_mark: | :x: | :x: | :x:
-| POST getTokenGoogle | :heavy_check_mark: | :x: | :x: | :x:
+| POST getTokenGoogle | :heavy_check_mark: | :x: | :x: | NA
 | POST createArbitraryUser | :heavy_check_mark: | :x: | :x: | :x:
 | POST revokeToken | :x: | :x: | :x: | :x:
 | POST setAccess | :heavy_check_mark: | :x: | :x: | :x:

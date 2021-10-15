@@ -2,10 +2,9 @@ const axios = require('axios')
 const fs = require('fs')
 const { Pool } = require('pg')
 
-
-APIURL = "http://localhost:3000/api/v1/";
 settings = JSON.parse(fs.readFileSync("../Settings.json"))
 JWTs = {"3": settings.DevTestJWT};
+APIURL = settings.TestAPIUrl;
 
 const pool = new Pool(settings.DBCreds)
 
@@ -21,24 +20,131 @@ beforeEach(async () => {
   JWTs["2"] = test2.data
   JWTs["1"] = test1.data
   JWTs["0"] = test0.data
-  await post("assignRange", {"email": "parkingdev@bentonvillek12.org", "range": JSON.stringify([1,4])})
-  //await post("assignSpot", {"email": "parkingdev@bentonvillek12.org", "sid": "0"}, JWTs["3"])
-  //await post("assignSpot", {"email": "parkingtesttwo@bentonvillek12.org", "sid": "1"}, JWTs["3"])
-  //await post("assignSpot", {"email": "parkingtestone@bentonvillek12.org", "sid": "2"}, JWTs["3"])
-  //await post("assignSpot", {"email": "parkingtestzero@bentonvillek12.org", "sid": "3"}, JWTs["3"])
-
-
-  /*
-  assignSpots
-  */
+  await post("assignRange", {"email": "parkingdev@bentonvillek12.org", "range": JSON.stringify([1,4])}, JWTs["3"])
+  await post("assignSpot", {"email": "parkingdev@bentonvillek12.org", "sid": "1"}, JWTs["3"])
+  await post("assignSpot", {"email": "parkingtesttwo@bentonvillek12.org", "sid": "2"}, JWTs["3"])
+  await post("assignSpot", {"email": "parkingtestone@bentonvillek12.org", "sid": "3"}, JWTs["3"])
+  await post("assignSpot", {"email": "parkingtestzero@bentonvillek12.org", "sid": "4"}, JWTs["3"])
 });
+
+/*
+test('', async () => {
+
+});
+*/
 
 test('getLot', async () => {
   res = await get("getLot", {}, JWTs["3"])
-  console.log(res.data)
-
-  expect(res.data.spots[0].owner_email).toBe('');
+  spots = res.data.spots
+  users = res.data.users
+  expectedSpots = [
+        {
+          id: 1,
+          name: '1 AM',
+          owner_email: 'parkingdev@bentonvillek12.org',
+          inuse: true,
+          current_email: 'parkingdev@bentonvillek12.org'
+        },
+        {
+          id: 2,
+          name: '2 AM',
+          owner_email: 'parkingtesttwo@bentonvillek12.org',
+          inuse: true,
+          current_email: 'parkingtesttwo@bentonvillek12.org'
+        },
+        {
+          id: 3,
+          name: '1 PM',
+          owner_email: 'parkingtestone@bentonvillek12.org',
+          inuse: true,
+          current_email: 'parkingtestone@bentonvillek12.org'
+        },
+        {
+          id: 4,
+          name: '2 PM',
+          owner_email: 'parkingtestzero@bentonvillek12.org',
+          inuse: true,
+          current_email: 'parkingtestzero@bentonvillek12.org'
+        }
+      ];
+  expectedUsers = [
+        {
+          email: 'parkingdev@bentonvillek12.org',
+          name: 'DEVELOPER NOTAPERSON',
+          license_plate: 'ABC123'
+        },
+        {
+          email: 'parkingtesttwo@bentonvillek12.org',
+          name: 'TEST2 NOTAPERSON',
+          license_plate: 'TEST222'
+        },
+        {
+          email: 'parkingtestone@bentonvillek12.org',
+          name: 'TEST1 NOTAPERSON',
+          license_plate: 'TEST111'
+        },
+        {
+          email: 'parkingtestzero@bentonvillek12.org',
+          name: 'TEST0 NOTAPERSON',
+          license_plate: 'TEST000'
+        }
+      ];
+  expect(spots.length).toBe(expectedSpots.length)
+  expect(users.length).toBe(expectedUsers.length)
+  for (var i = 0; i < expectedUsers.length; i++) {
+    expect(users.findIndex(a => objEqual(a, expectedUsers[i]))).toBeGreaterThanOrEqual(0) // dont love this due to how output works, but easier to write so idk.
+  }
+  for (var i = 0; i < expectedSpots.length; i++) {
+    expect(spots.findIndex(a => objEqual(a, expectedSpots[i]))).toBeGreaterThanOrEqual(0)
+  }
 });
+
+
+test('getAllUsers - access Lvl 3', async () => {
+  res = await get("getAllUsers", {}, JWTs["3"])
+  console.log(res.data)
+  expectedUsers = [
+        {
+          email: 'parkingdev@bentonvillek12.org',
+          name: 'DEVELOPER NOTAPERSON',
+          access: 3,
+          license_plate: 'ABC123'
+        },
+        {
+          email: 'parkingtesttwo@bentonvillek12.org',
+          name: 'TEST2 NOTAPERSON',
+          access: 2,
+          license_plate: 'TEST222'
+        },
+        {
+          email: 'parkingtestone@bentonvillek12.org',
+          name: 'TEST1 NOTAPERSON',
+          access: 1,
+          license_plate: 'TEST111'
+        },
+        {
+          email: 'parkingtestzero@bentonvillek12.org',
+          name: 'TEST0 NOTAPERSON',
+          access: 0,
+          license_plate: 'TEST000'
+        }
+      ];
+  users = res.data
+  expect(res.data.length).toBe(expectedUsers.length)
+  for (var i = 0; i < expectedUsers.length; i++) {
+    console.log(expectedUsers[i])
+    expect(users.findIndex(a => objEqual(a, expectedUsers[i]))).toBeGreaterThanOrEqual(0) // dont love this due to how output works, but easier to write so idk.
+  }
+});
+
+test('getAllUsers - access Lvl 2', async () => {
+    err = await get("getAllUsers", {}, JWTs["2"])
+    expect(err.response).not.toBeUndefined()
+    expect(err.response.data).not.toBeUndefined()
+    expect(err.response.data.err).toBe(102)
+    expect(err.response.data.msg).toBe("Invalid authorization.")
+});
+
 
 /*
 (async () => {
@@ -70,7 +176,7 @@ async function get(route, params, JWT) {
   return await axios.get(APIURL+route, {params: params, headers: {authorization: "Bearer "+JWT}})
   .catch(function (error) {
     // handle error
-    console.log(error);
+    return error
   })
 }
 
@@ -80,10 +186,35 @@ async function post(route, params, JWT) {
     key = Object.keys(params)[i]
     URLParams.append(key, params[key])
   }
-  const response = await axios.post(APIURL+route, URLParams, {headers: {authorization: "Bearer "+JWT}})
+  return await axios.post(APIURL+route, URLParams, {headers: {authorization: "Bearer "+JWT}})
   .catch(function (error) {
     // handle error
-    console.log(error);
+    return error
   })
-  return response;
+}
+
+function objEqual(a,b) { // maybe i should just use lodash for this.
+  aKeys = Object.keys(a)
+  bKeys = Object.keys(b)
+  if (aKeys.length != bKeys.length) {
+    return false;
+  }
+  for (var i = 0; i < aKeys.length; i++) {
+    found = false
+    for (var j = 0; j < bKeys.length; j++) {
+      if (aKeys[i] == bKeys[j]) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return false;
+    }
+  }
+  for (var i = 0; i < aKeys.length; i++) {
+    if (a[aKeys[i]] !== b[aKeys[i]]) {
+      return false;
+    }
+  }
+  return true;
 }

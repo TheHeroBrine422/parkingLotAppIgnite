@@ -12,5 +12,6 @@
     "private": "keys/ec512-private.pem",
     "algo": "ES512"
   },
-  "DevTestJWT": ""
+  "DevTestJWT": "",
+  "TestAPIUrl": ""
 }

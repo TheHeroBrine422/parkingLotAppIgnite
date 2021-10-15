@@ -17,19 +17,20 @@ Authentication is done through the Authentication header, which expects `Bearer 
 3. Generate JWT signing keys. (openssl)
 4. Configure Settings.json (make a copy of SettingsEx.json and rename it)
 5. Run `node main.js`
-
+6. somehow create a user account for yourself with access 3 (most likely edit the database to create the user.) The onboarding progress is currently bad, but I currently haven't implemented a better solution
 # Todo list (not prioritized)
 
 1. TEST AND DOCUMENT. For testing, I am no longer doing it manually, and just writing testing using jest cause I need to do it anyway and most things need a lot of testing. Will do documentation after everything works.
 2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 3. check for race conditions
 4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
-5. add checks that tables exist and create them if needed in app.listen(). Could also do this with JWT keys maybe.
+  * This issue only appears in main.js but not in test.js with jest. I have no clue why that would happen
+5. add checks for types in app.listen db reset?
+6. make getTokenGoogle actually create accounts
+7. make createArbitraryUser check if the user it is trying to create already exists and maybe just abstract the code into a function so I can use it in getTokenGoogle
 6. create New Routes
-  * add/remove spot for 2+
-  * getRanges
-  * fix revokeSessionToken for JWTs
-  * createArbitraryUser for 3 dev only for testing
+  * fix revokeToken for JWTs
+10. add expiration to JWT
 
 # release Checklist:
 
@@ -45,6 +46,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 6. remove db errors in err() cause too much info (SQL query). when i setup better logging, put it there so it will only be accessible to the devloper. Might want to add a route for devs to access logs
 7. probably should implement csrf protection
 8. make checkParams and verifyToken express middleware rather then just functions ran on each route. I really want to do this for learning reasons, but it will require a refactor and isn't really that important.
+9. make first user to create acc get access lvl 3
 
 # Route To-Do List:
 
@@ -65,20 +67,20 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | POST createReport | :heavy_check_mark: | :x: | :x: | :x:
 | POST deleteReport | :heavy_check_mark: | :x: | :x: | :x:
 | GET getReports | :heavy_check_mark: | :x: | :x: | :x:
-| POST getSessionTokenGoogle | :heavy_check_mark: | :x: | :x: | :x:
-| POST createArbitraryUser | :x: | :x: | :x: | :x:
-| POST revokeSessionToken | :x: | :x: | :x: | :x:
+| POST getTokenGoogle | :heavy_check_mark: | :x: | :x: | :x:
+| POST createArbitraryUser | :heavy_check_mark: | :x: | :x: | :x:
+| POST revokeToken | :x: | :x: | :x: | :x:
 | POST setAccess | :heavy_check_mark: | :x: | :x: | :x:
 | POST deleteAccount | :heavy_check_mark: | :x: | :x: | :x:
 | POST unassignSpot | :heavy_check_mark: | :x: | :x: | :x:
-| POST createSpot | :x: | :x: | :x: | :x:
-| POST deleteSpot | :x: | :x: | :x: | :x:
+| POST createSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST deleteSpot | :heavy_check_mark: | :x: | :x: | :x:
 | GET getSchedule | :heavy_check_mark: | :x: | :x: | :x:
 | POST releaseSpotFuture | :heavy_check_mark: | :x: | :x: | :x:
 | POST removeFutureReleasedSpot | :heavy_check_mark: | :x: | :x: | :x:
 | POST assignRange | :heavy_check_mark: | :x: | :x: | :x:
 | POST removeRange | :heavy_check_mark: | :x: | :x: | :x:
-| GET getRanges | :x: | :x: | :x: | :x:
+| GET getRanges | :heavy_check_mark: | :x: | :x: | :x:
 | GET forceResetSpots | :heavy_check_mark: | :x: | :x: | :x:
 | GET resetDB | :heavy_check_mark: | :x: | :x: | :x:
 
@@ -118,7 +120,7 @@ Algo: ES512
 
 WIP. Check main.js
 
-# GET Routes
+# GET Routes OUT OF DATE (Probably gonna change how I document this cause too many routes for one file.)
 
 ### /getLot
 
@@ -229,7 +231,7 @@ URL: http://localhost:3000/api/v1/getReports?stoken={token}
 ```
 ```
 
-### /getSessionTokenGoogle
+### /getTokenGoogle
 
 WIP
 

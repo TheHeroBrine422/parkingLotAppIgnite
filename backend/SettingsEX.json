@@ -10,8 +10,12 @@
   "JWT": {
     "public": "keys/ec512-public.pem",
     "private": "keys/ec512-private.pem",
-    "algo": "ES512"
+    "algo": "ES512",
+    "expTime": 30*24*60*60*1000
   },
   "DevTestJWT": "",
-  "TestAPIUrl": ""
+  "TestAPIUrl": "http://localhost:3000/api/v1/",
+  "checkDBTables": true,
+  "devMode": true,
+  "port": 3000
 }

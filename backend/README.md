@@ -2,9 +2,11 @@
 
 Backend server for parkingLotAppIgnite
 
+Main Contributor: [Hero](https://github.com/TheHeroBrine422)
+
 HTTP based api connected to postgres DB server using express and nodejs.
 
-Overall API url: {url}:3000/api/v1/{route}
+Overall API url: `{url}:3000/api/v1/{route}`
 
 Post requests are expecting form-data formatting.
 
@@ -17,7 +19,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 3. Generate JWT signing keys. (openssl)
 4. Configure Settings.json (make a copy of SettingsEx.json and rename it)
 5. Run `node main.js`
-6. somehow create a user account for yourself with access 3 (most likely edit the database to create the user.) The onboarding progress is currently bad, but I currently haven't implemented a better solution
+6. Somehow create a user account for yourself with access level 2 or 3 (most likely edit the database to create the user.) The onboarding progress is currently bad, but I currently haven't implemented a better solution yet. resetDB also creates a access level 3 account under `parkingdev@bentonvillek12.org`. If you sign your own token you could use this account to give another account access level 2 or 3. Access level 3 only does things if the server is in devMode which is not recommended for production use. devMode enables extra logging that could be considered insecure, and extra routes that also could be considered insecure. These routes are protected via developer authentication tokens, but if something goes wrong it would be very bad (Examples: wiping the DB or access to any users account). Rather have several layers of security by making the route not exist in the first place.
 
 # release Checklist:
 
@@ -26,14 +28,13 @@ Authentication is done through the Authentication header, which expects `Bearer 
 # Todo list (not prioritized)
 
 1. TEST AND DOCUMENT. For testing, I am no longer doing it manually, and just writing testing using jest cause I need to do it anyway and most things need a lot of testing. Will do documentation after everything works.
-  * remember to remove debug console.logs when finished writing testing code
+  * remember to remove debug console.logs (both test.js and main.js) when finished writing testing code
+  * finish writing failed parameter autogen.
 2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-3. check for race conditions
 4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
   * This issue only appears in main.js but not in test.js with jest. I have no clue why that would happen
 5. add checks for types in app.listen db reset?
-6. make getTokenGoogle actually create accounts
-7. make createArbitraryUser check if the user it is trying to create already exists and maybe just abstract the code into a function so I can use it in getTokenGoogle
+6. check google ouath token name param to make sure it is set properly in POST getTokenGoogle during acc creation.
 6. create New Routes
   * fix revokeToken for JWTs
 10. add expiration to JWT
@@ -50,6 +51,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 7. probably should implement csrf protection
 8. make checkParams and verifyToken express middleware rather then just functions ran on each route. I really want to do this for learning reasons, but it will require a refactor and isn't really that important.
 9. make first user to create acc get access lvl 3
+10. allow teachers to force take/release spot?
 
 # Route To-Do List:
 
@@ -59,12 +61,12 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | ----- | ----- | ----- | ----- | ----- |
 | GET getLot | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
 | GET getAllUsers | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
-| POST takeSpot | :heavy_check_mark: | :x: | :x: | :x:
+| POST takeSpot | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark:
 | POST setLicensePlate | :heavy_check_mark: | :x: | :x: | :x:
-| POST releaseSpot | :heavy_check_mark: | :heavy_check_mark: | :x: | :x: |
+| POST releaseSpot | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
 | GET getUser | :heavy_check_mark: | :x: | :x: | :x: |
 | GET getUserByPlate | :heavy_check_mark: | :x: | :x: | :x:
-| GET getUsers | :heavy_check_mark: | | :x: | :x:
+| GET getUsers | :heavy_check_mark: | :x: | :x: | :x:
 | POST assignSpot | :heavy_check_mark: | :x: | :x: | :x:
 | POST createBlankUser | :heavy_check_mark: | :x: | :x: | :x:
 | POST createReport | :heavy_check_mark: | :x: | :x: | :x:

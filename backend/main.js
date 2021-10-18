@@ -10,11 +10,6 @@ settings = JSON.parse(fs.readFileSync("Settings.json", 'utf8'))
 privJWTKey = fs.readFileSync(settings.JWT.private, 'utf8')
 pubJWTKey = fs.readFileSync(settings.JWT.public, 'utf8')
 
-port = 3000;
-CLIENT_ID = settings.CLIENT_ID
-expirationTime = 30*24*60*60*1000 // 30 days
-devMode = true; // disable this in prod. commenting out the dev functions at the bottom is probably a good idea too just in case.
-
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -164,10 +159,9 @@ app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user 
   }
 });
 
-// DEV ONLY.
 app.get('/api/v1/getAllUsers', (req, res) => {
   if (checkParams(res, req.query, [])) {
-    verifyToken(res, 3, req.headers.authorization, (user) => {
+    verifyToken(res, 2, req.headers.authorization, (user) => {
       pool.query('SELECT * FROM users', (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
@@ -198,7 +192,6 @@ app.post('/api/v1/takeSpot', (req, res) => {
     verifyToken(res, 0, req.headers.authorization, (user) => {
       pool.query('SELECT * FROM spots', (err, DBres) => {
         found = false
-        hasSpot = false
         for (var i = 0; i < DBres.rows.length; i++) {
           if (DBres.rows[i].id == req.body.sid) {
             found = true
@@ -512,8 +505,7 @@ app.post('/api/v1/getTokenGoogle', async (req, res) => {
 
       console.log(payload)
       if (payload['hd'] == "bentonvillek12.org") {
-        token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
-        res.send(token)
+        createUser(res, payload.email, 0, payload.name, null)
       } else {
         res.status(400).send(error(109))
       }
@@ -670,18 +662,11 @@ app.get('/api/v1/getRanges', (req, res) => {
   }
 });
 
-if (devMode) { // this stuff should probably be completely commented out for security reasons in prod.
+if (settings.devMode) { // this stuff should probably be completely commented out for security reasons in prod.
   app.post('/api/v1/createArbitraryUser', (req, res) => {
     if (checkParams(res, req.body, ["email", "access", "name", "license_plate"])) {
       verifyToken(res, 3, req.headers.authorization, (user) => {
-        pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [req.body.email, req.body.access, req.body.name, req.body.license_plate], (err, DBres) => {
-          if (err) {
-            res.status(400).send(error(107, JSON.stringify(err)))
-          } else {
-            token = jwt.sign({"email": req.body}, privJWTKey, { algorithm: settings.JWT.algo});
-            res.send(token)
-          }
-        });
+        createUser(res, req.body.email, req.body.access, req.body.name, req.body.license_plate)
       });
     }
   });
@@ -719,25 +704,26 @@ if (devMode) { // this stuff should probably be completely commented out for sec
   });
 }
 
-app.listen(port, () => {
-  console.log(`Started server at http://localhost:${port}!`)
+app.listen(settings.port, () => {
   setTimeout(resetSpots, calcTimeResetSpots())
 
-  pool.query('SELECT * FROM pg_catalog.pg_tables WHERE schemaname != \'information_schema\' AND schemaname != \'pg_catalog\'', (err, DBres) => {
-    tableList = ["spots", "users", "reports", "revokedtokens", "ranges", "schedule"]
-    goodRows = 0
-    for (var i = 0; i < tableList.length; i++) {
-      for (var j = 0; j < DBres.rows.length; j++) {
-        if (DBres.rows[j].tablename == tableList[i]) {
-          goodRows++;
-          break;
+  if (settings.checkDBTables) {
+    pool.query('SELECT * FROM pg_catalog.pg_tables WHERE schemaname != \'information_schema\' AND schemaname != \'pg_catalog\'', (err, DBres) => {
+      tableList = ["spots", "users", "reports", "revokedtokens", "ranges", "schedule"]
+      goodRows = 0
+      for (var i = 0; i < tableList.length; i++) {
+        for (var j = 0; j < DBres.rows.length; j++) {
+          if (DBres.rows[j].tablename == tableList[i]) {
+            goodRows++;
+            break;
+          }
         }
       }
-    }
-    if (goodRows != tableList.length) {
-      resetDB()
-    }
-  });
+      if (goodRows != tableList.length) {
+        resetDB()
+      }
+    });
+  }
 });
 
 function resetSpots() {
@@ -780,4 +766,25 @@ function calcTimeResetSpots() {
     wait += 86400000; // if its already passed, do it tmrw.
   }
   return wait
+}
+
+function createUser(res, email, access, name, license_plate) {
+  token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
+  pool.query('SELECT * FROM users WHERE email=$1', [email], (err, DBres) => {
+    if (err) {
+      res.status(400).send(error(107, JSON.stringify(err)))
+    } else {
+      if (DBres.rows == null || DBres.rows[0] == null) {
+        pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
+          if (err) {
+            res.status(400).send(error(107, JSON.stringify(err)))
+          } else {
+            res.send(token)
+          }
+        });
+      } else {
+        res.send(token)
+      }
+    }
+  });
 }

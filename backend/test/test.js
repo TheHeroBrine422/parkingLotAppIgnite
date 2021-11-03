@@ -1,9 +1,11 @@
 const axios = require('axios')
 const fs = require('fs')
 const { Pool } = require('pg')
+const jwt = require('jsonwebtoken')
 
 settings = JSON.parse(fs.readFileSync("../Settings.json"))
-JWTs = {"3": settings.DevTestJWT};
+privJWTKey = fs.readFileSync("../"+settings.JWT.private, 'utf8')
+JWTs = {"3": jwt.sign({"email": "parkingdev@bentonvillek12.org"}, privJWTKey, { algorithm: settings.JWT.algo})};
 APIURL = settings.TestAPIUrl;
 
 const pool = new Pool(settings.DBCreds)
@@ -219,20 +221,23 @@ for (var i = 0; i < routes.length; i++) { // autoGen failure routes. This has co
       JWT = datas[j].JWT
     }
     delete datas[j].JWT
-    /*test(routes[i][0]+" "+routes[i][1]+" autoGen: "+(j+1)+"/"+datas.length, async (data, route, JWT) => {
-      if (route[0] == "GET") {
-        err = await get(route[1], data, JWT)
-      } else if (route[0] == "POST") {
-        err = await post(route[1], data, JWT)
-      } else {
-        expect(route[0]).toBe("invalid HTTP")
-      }
-      expect(err.response).not.toBeUndefined()
-      expect(err.response.data).not.toBeUndefined()
-      expect(err.response.data.err).not.toBeUndefined()
-    }, datas[j], routes[i], JWT);*/
-    // TODO: fix tests (figure out how to pass data into test). Need internet to figure it out.
+    autoTest({"data": datas[j], "route": routes[i], "JWT": JWT})
   }
+}
+
+function autoTest(temp) {
+  test(temp.route[0]+" "+temp.route[1]+" autoGen", async () => {
+    if (temp.route[0] == "GET") {
+      err = await get(temp.route[1], temp.data, temp.JWT)
+    } else if (temp.route[0] == "POST") {
+      err = await post(temp.route[1], temp.data, temp.JWT)
+    } else {
+      expect(temp.route[0]).toBe("invalid HTTP")
+    }
+    expect(err.response).not.toBeUndefined()
+    expect(err.response.data).not.toBeUndefined()
+    expect(err.response.data.err).not.toBeUndefined()
+  });
 }
 
 async function get(route, params, JWT) {

@@ -39,6 +39,8 @@ Authentication is done through the Authentication header, which expects `Bearer 
   * fix revokeToken for JWTs
 10. add expiration to JWT
 11. i dont think scheduling works properly for teachers.
+12. rate limits
+13. fix resetdb when tables are wrong
 
 ### Other Potential Ideas
 
@@ -72,7 +74,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | POST createReport | :heavy_check_mark: | :x: | :x: | :x:
 | POST deleteReport | :heavy_check_mark: | :x: | :x: | :x:
 | GET getReports | :heavy_check_mark: | :x: | :x: | :x:
-| POST getTokenGoogle | :heavy_check_mark: | :x: | :x: | NA
+| POST getTokenGoogle | :heavy_check_mark: | :x: | :x: | NA (puppeteer maybe?)
 | POST createArbitraryUser | :heavy_check_mark: | :x: | :x: | :x:
 | POST revokeToken | :x: | :x: | :x: | :x:
 | POST setAccess | :heavy_check_mark: | :x: | :x: | :x:

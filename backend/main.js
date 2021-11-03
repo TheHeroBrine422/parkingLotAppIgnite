@@ -10,21 +10,16 @@ settings = JSON.parse(fs.readFileSync("Settings.json", 'utf8'))
 privJWTKey = fs.readFileSync(settings.JWT.private, 'utf8')
 pubJWTKey = fs.readFileSync(settings.JWT.public, 'utf8')
 
+CLIENT_ID = settings.CLIENT_ID
+expirationTime = 30*24*60*60*1000 // 30 days
+
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const client = new OAuth2Client(settings.CLIENT_ID);
 
-const pool = new Pool({
-    "user": "postgres",
-    "host": "localhost",
-    "database": "postgres",
-    "password": "test",
-    "port": 5432
-  })
-
-//const pool = new Pool(settings.DBCreds)
+const pool = new Pool(settings.DBCreds)
 
 paramRegex = {"sid": /[0-9]*/,
               "stoken": /[a-zA-Z0-9]{64}/,
@@ -33,7 +28,7 @@ paramRegex = {"sid": /[0-9]*/,
               "access": /[0-3]{1}/,
               "note": /[^]*/,
               "rid": /[0-9]*/,
-              "credential": /[^]*/,
+              "credential": /^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*/,
               "g_csrf_token": /[0-9a-f]{16}/,
               "emails": /[a-z@0-9.\[\]\",]*/,
               "range": /\[[0-9]*,[0-9]*\]/,
@@ -159,6 +154,7 @@ app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user 
   }
 });
 
+// DEV ONLY.
 app.get('/api/v1/getAllUsers', (req, res) => {
   if (checkParams(res, req.query, [])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
@@ -192,6 +188,7 @@ app.post('/api/v1/takeSpot', (req, res) => {
     verifyToken(res, 0, req.headers.authorization, (user) => {
       pool.query('SELECT * FROM spots', (err, DBres) => {
         found = false
+        hasSpot = false
         for (var i = 0; i < DBres.rows.length; i++) {
           if (DBres.rows[i].id == req.body.sid) {
             found = true
@@ -224,11 +221,11 @@ app.post('/api/v1/takeSpot', (req, res) => {
 app.post('/api/v1/setLicensePlate', (req, res) => {
   if (checkParams(res, req.body, ["license_plate"])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
-      pool.query('UPDATE users SET license_plate=$1 WHERE email=$2', [license_plate, user.email], (err, DBres) => {
+      pool.query('UPDATE users SET license_plate=$1 WHERE email=$2', [req.body.license_plate, user.email], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
-          res.send(JSON.stringify(DBres.rows))
+          res.send(JSON.stringify({"msg":"success"}))
         }
       });
     });
@@ -505,7 +502,8 @@ app.post('/api/v1/getTokenGoogle', async (req, res) => {
 
       console.log(payload)
       if (payload['hd'] == "bentonvillek12.org") {
-        createUser(res, payload.email, 0, payload.name, null)
+        token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
+        res.send(token)
       } else {
         res.status(400).send(error(109))
       }
@@ -769,22 +767,16 @@ function calcTimeResetSpots() {
 }
 
 function createUser(res, email, access, name, license_plate) {
-  token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
-  pool.query('SELECT * FROM users WHERE email=$1', [email], (err, DBres) => {
-    if (err) {
-      res.status(400).send(error(107, JSON.stringify(err)))
-    } else {
-      if (DBres.rows == null || DBres.rows[0] == null) {
-        pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
-          if (err) {
-            res.status(400).send(error(107, JSON.stringify(err)))
-          } else {
-            res.send(token)
-          }
-        });
-      } else {
-        res.send(token)
-      }
+  pool.query('SELECT email FROM users WHERE email=$1', [email], (err, DBres) => {
+    if (DBres.rows.length == 0) {
+      pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          token = jwt.sign({"email": email}, privJWTKey, { algorithm: settings.JWT.algo});
+          res.send(token)
+        }
+      });
     }
   });
 }

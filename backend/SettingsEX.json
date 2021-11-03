@@ -13,7 +13,6 @@
     "algo": "ES512",
     "expTime": 30*24*60*60*1000
   },
-  "DevTestJWT": "",
   "TestAPIUrl": "http://localhost:3000/api/v1/",
   "checkDBTables": true,
   "devMode": true,

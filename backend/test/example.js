@@ -9,7 +9,15 @@ JWTs = {"3": jwt.sign({"email": "parkingdev@bentonvillek12.org"}, privJWTKey, { 
 APIURL = settings.TestAPIUrl;
 
 (async () => {
-  //res = await get("getSessionTokenInsecureDev", {"email":"jonescal@bentonvillek12.org"})
+  res = await post("createSpot", {"name": "1 AM"}, JWTs["3"])
+  console.log(res.data)
+  res = await post("createSpot", {"name": "2 AM"}, JWTs["3"])
+  console.log(res.data)
+  res = await post("createSpot", {"name": "1 PM"}, JWTs["3"])
+  console.log(res.data)
+  res = await post("createSpot", {"name": "2 PM"}, JWTs["3"])
+  console.log(res.data)
+  /*//res = await get("getSessionTokenInsecureDev", {"email":"jonescal@bentonvillek12.org"})
   //console.log(res.data)
   //token = res.data.token
   res = await get("getLot", {}, JWTs["3"])
@@ -31,7 +39,7 @@ APIURL = settings.TestAPIUrl;
   //res = await get("getUser", {"email": "jonescal@bentonvillek12.org"})
   //console.log(res.data)
   //res = await get("getUsers", {"emails": JSON.stringify(["jonescal@bentonvillek12.org", "abc@bentonvillek12.org"])})
-  //console.log(res.data)
+  //console.log(res.data)*/
 })();
 
 async function get(route, params, JWT) {

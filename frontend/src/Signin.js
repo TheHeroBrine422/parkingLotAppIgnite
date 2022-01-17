@@ -40,13 +40,13 @@ class Signin extends React.Component {
             .catch(function (error) {
                 return error
             })
-        if (token.response == null) {
+        if (token.response === undefined) {
             this.props.setToken(token)
             this.props.changePage("Lot")
         } else if (token.response.status === 400 && token.response.data.err === 109) {
             alert("Invalid Google Account.")
         } else {
-            await this.signin(res)
+            setTimeout(this.signin,1000, res)
         }
     }
 

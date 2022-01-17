@@ -1,3 +1,33 @@
 .spot {
+    color:black;
+    float: left;
+    text-align: center;
     padding: 2px;
+    display:inline;
+    width: 7vw;
+    height: 12vw;
+    background: yellow;
+    vertical-align: text-top;
+    border:solid 2px #AAA;
+}
+
+.inuse {
+    background: red
+}
+
+.free {
+    background: green
+}
+
+.inuse-owned {
+    background: cyan
+}
+
+.free-owned {
+    background: white
+}
+
+.current {
+    background: black;
+    color:white;
 }

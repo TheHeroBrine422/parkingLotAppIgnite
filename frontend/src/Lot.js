@@ -7,6 +7,9 @@ class Lot extends React.Component {
     constructor(props) {
         super(props)
         this.getLot = this.getLot.bind(this)
+        this.state = {
+            lot: {spots: [], users: []}
+        }
         this.getLot()
     }
 
@@ -28,19 +31,14 @@ class Lot extends React.Component {
         this.setState({lot: lot})
     }
     render() {
-        if (this.state != null) {
-            return (
-                <div className="lot">
-                    {this.state.lot.spots.map(spot => (<Spot spot={spot} />))}
-                </div>
-            );
-        } else {
-            return (
-                <div className="lot">
-                    <p>Loading...</p>
-                </div>
-            );
-        }
+        return (
+            <div>
+                <text>Green is free, red is inuse, white is free and you are owner, cyan is inuse and you are owner, and black is your current spot</text>
+            <div className="lot">
+                {this.state.lot.spots.map(spot => (<Spot spot={spot} user={this.props.user}/>))}
+            </div>
+            </div>
+        );
     }
 }
 

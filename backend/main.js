@@ -29,20 +29,24 @@ const pool = new Pool({
   "port": 5432
 })
 
-paramRegex = {"sid": /[0-9]*/,
-              "stoken": /[a-zA-Z0-9]{64}/,
-              "email": /[a-z]*@bentonvillek12.org/,
-              "license_plate": /[A-Z0-9]{1,7}/,
-              "access": /[0-3]{1}/,
-              "note": /[^]*/,
-              "rid": /[0-9]*/,
-              "credential": /^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*/,
-              "g_csrf_token": /[0-9a-f]{16}/,
-              "emails": /[a-z@0-9.\[\]\",]*/,
-              "range": /\[[0-9]*,[0-9]*\]/,
-              "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
-              "schid": /[0-9]*/,
-              "name": /[a-zA-Z 0-9]*/}
+paramRegex = {
+  "sid": /[0-9]*/,
+  "stoken": /[a-zA-Z0-9]{64}/,
+  "email": /[a-z]*@bentonvillek12.org/,
+  "license_plate": /[A-Z0-9]{1,7}/,
+  "access": /[0-3]{1}/,
+  "note": /[^]*/,
+  "rid": /[0-9]*/,
+  "credential": /^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*/,
+  "g_csrf_token": /[0-9a-f]{16}/,
+  "emails": /[a-z@0-9.\[\]\",]*/,
+  "range": /\[[0-9]*,[0-9]*\]/,
+  "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
+  "schid": /[0-9]*/,
+  "name": /[a-zA-Z 0-9]*/,
+  "section": /[AP]{1}M/,
+  "number": /[0-9]{1-3}/
+}
 
 errors = {100: "Invalid Number of parameters.",
           101: "Invalid Parameter.",
@@ -331,7 +335,21 @@ app.post('/api/v1/releaseSpot', (req, res) => {
 app.get('/api/v1/getUser', (req, res) => {
   if (checkParams(res, req.query, ["email"])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
-      pool.query("SELECT email, name, license_plate, access FROM users WHERE email=$1", [req.query.email], (err, DBres) => {
+      pool.query("SELECT email, name, license_plate, access, section FROM users WHERE email=$1", [req.query.email], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify(DBres.rows[0]))
+        }
+      });
+    });
+  }
+});
+
+app.get('/api/v1/getSelf', (req, res) => {
+  if (checkParams(res, req.query, [])) {
+    verifyToken(res, 0, req.headers.authorization, (user) => {
+      pool.query("SELECT email, name, license_plate, access, section FROM users WHERE email=$1", [user.email], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
@@ -371,7 +389,7 @@ app.get('/api/v1/getUsers', (req, res) => {
           return;
         }
       }
-      query = "SELECT email, name, license_plate, access FROM users WHERE email=$1"
+      query = "SELECT email, name, license_plate, access, section FROM users WHERE email=$1"
       for (var i = 1; i < email.length; i++) {
         query += " OR email=$"+(i+1)
       }
@@ -525,7 +543,7 @@ app.post('/api/v1/getTokenGoogleCSRF', async (req, res) => {
 
       console.log(payload)
       if (payload['hd'] == "bentonvillek12.org") {
-        createUser(res, payload['email'], 0, payload['name'], '')
+        createUser(res, payload['email'], 0, payload['name'], '', '')
       } else {
         res.status(400).send(error(109))
       }
@@ -548,7 +566,7 @@ app.post('/api/v1/getTokenGoogle', async (req, res) => {
 
     console.log(payload)
     if (payload['hd'] == "bentonvillek12.org") {
-      createUser(res, payload['email'], 0, payload['name'], '')
+      createUser(res, payload['email'], 0, payload['name'], '', '')
     } else {
       res.status(400).send(error(109))
     }
@@ -669,9 +687,9 @@ app.post('/api/v1/deleteAccount', (req, res) => {
 });
 
 app.post('/api/v1/createSpot', (req, res) => {
-  if (checkParams(res, req.body, ["name"])) {
+  if (checkParams(res, req.body, ["number", "section"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
-      pool.query('INSERT INTO spots (NAME, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES ($1, \'\', false, \'\')', [req.body.name], (err, DBres) => {
+      pool.query('INSERT INTO spots (NUMBER, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES ($1, \'\', false, \'\')', [req.body.number, req.body.section], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
@@ -726,9 +744,9 @@ app.get('/api/v1/getRanges', (req, res) => {
 
 if (settings.devMode) { // this stuff should probably be completely commented out for security reasons in prod.
   app.post('/api/v1/createArbitraryUser', (req, res) => {
-    if (checkParams(res, req.body, ["email", "access", "name", "license_plate"])) {
+    if (checkParams(res, req.body, ["email", "access", "name", "license_plate", "section"])) {
       verifyToken(res, 3, req.headers.authorization, (user) => {
-        createUser(res, req.body.email, req.body.access, req.body.name, req.body.license_plate)
+        createUser(res, req.body.email, req.body.access, req.body.name, req.body.license_plate, req.body.section)
       });
     }
   });
@@ -830,13 +848,13 @@ function calcTimeResetSpots() {
   return wait
 }
 
-function createUser(res, email, access, name, license_plate) {
+function createUser(res, email, access, name, license_plate, section) {
   pool.query('SELECT email FROM users WHERE email=$1', [email], (err, DBres) => {
     if (err) {
       res.status(400).send(error(107, JSON.stringify(err)))
     }
     if (DBres.rows.length == 0) {
-      pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
+      pool.query('INSERT INTO users VALUES ($1, $2, $3, $4, $5)', [email, access, name, license_plate, section], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {

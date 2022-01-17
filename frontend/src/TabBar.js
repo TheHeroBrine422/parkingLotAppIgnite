@@ -11,17 +11,14 @@ class TabBar extends React.Component {
     }
 
     lot() {
-        console.log("lot!")
         this.props.changePage("Lot")
     }
 
     settings() {
-        console.log("settings!")
         this.props.changePage("Settings")
     }
 
     logout() {
-        console.log("log out")
         this.props.setToken("")
         this.props.changePage("Signin")
         // TODO: revokeToken

@@ -1,3 +1,4 @@
+import './Settings.css'
 import React from "react";
 
 class Settings extends React.Component {
@@ -7,7 +8,8 @@ class Settings extends React.Component {
 
     render() {
         return (
-            <text>Settings!</text>
+            <div className="settings"><text>Settings!</text><text>{JSON.stringify(this.props.user)}</text></div>
+
         )
 
     }

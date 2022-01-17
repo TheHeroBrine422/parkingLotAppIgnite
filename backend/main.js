@@ -19,7 +19,15 @@ app.use(cookieParser());
 
 const client = new OAuth2Client(settings.CLIENT_ID);
 
-const pool = new Pool(settings.DBCreds)
+//const pool = new Pool(settings.DBCreds)
+
+const pool = new Pool({
+  "user": "postgres",
+  "host": "localhost",
+  "database": "parkingLot",
+  "password": "testpassword",
+  "port": 5432
+})
 
 paramRegex = {"sid": /[0-9]*/,
               "stoken": /[a-zA-Z0-9]{64}/,
@@ -118,6 +126,12 @@ function verifyToken(res, access, token, callback) {
     res.status(401).send(error(102))
   }
 }
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "*");
+  next();
+});
 
 app.get('/api/v1/getLot', (req, res) => { // Fields: [token] // TODO: send user data too.
   if (checkParams(res, req.query, [])) {
@@ -497,7 +511,7 @@ app.get('/api/v1/getReports', (req, res) => {
   }
 });
 
-app.post('/api/v1/getTokenGoogle', async (req, res) => {
+app.post('/api/v1/getTokenGoogleCSRF', async (req, res) => {
   if (checkParams(res, req.body, ["credential", "g_csrf_token"])) {
     if (req.body.g_csrf_token == req.cookies.g_csrf_token) {
       const ticket = await client.verifyIdToken({
@@ -511,13 +525,32 @@ app.post('/api/v1/getTokenGoogle', async (req, res) => {
 
       console.log(payload)
       if (payload['hd'] == "bentonvillek12.org") {
-        token = jwt.sign({"email": payload['email']}, privJWTKey, { algorithm: settings.JWT.algo});
-        res.send(token)
+        createUser(res, payload['email'], 0, payload['name'], '')
       } else {
         res.status(400).send(error(109))
       }
     } else {
       res.status(400).send(error(106))
+    }
+  }
+});
+
+app.post('/api/v1/getTokenGoogle', async (req, res) => {
+  if (checkParams(res, req.body, ["credential"])) {
+    const ticket = await client.verifyIdToken({
+      idToken: req.body.credential,
+      audience: settings.CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+      // Or, if multiple clients access the backend:
+      //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+    const userid = payload['sub'];
+
+    console.log(payload)
+    if (payload['hd'] == "bentonvillek12.org") {
+      createUser(res, payload['email'], 0, payload['name'], '')
+    } else {
+      res.status(400).send(error(109))
     }
   }
 });
@@ -798,22 +831,22 @@ function calcTimeResetSpots() {
 }
 
 function createUser(res, email, access, name, license_plate) {
-  pool.query('SELECT * FROM users WHERE email=$1', [email], (err, DBres) => {
+  pool.query('SELECT email FROM users WHERE email=$1', [email], (err, DBres) => {
     if (err) {
       res.status(400).send(error(107, JSON.stringify(err)))
+    }
+    if (DBres.rows.length == 0) {
+      pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          token = jwt.sign({"email": email}, privJWTKey, { algorithm: settings.JWT.algo});
+          res.send(token)
+        }
+      });
     } else {
-      if (DBres.rows == null || DBres.rows[0] == null) {
-        pool.query('INSERT INTO users VALUES ($1, $2, $3, $4)', [email, access, name, license_plate], (err, DBres) => {
-          if (err) {
-            res.status(400).send(error(107, JSON.stringify(err)))
-          } else {
-            token = jwt.sign({"email": email}, privJWTKey, { algorithm: settings.JWT.algo});
-            res.send(token)
-          }
-        });
-      } else {
-        res.send(token)
-      }
+      token = jwt.sign({"email": email}, privJWTKey, { algorithm: settings.JWT.algo});
+      res.send(token)
     }
   });
 }

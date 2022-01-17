@@ -105,7 +105,7 @@ function verifyToken(res, access, token, callback) {
               res.status(401).send(error(102))
             } else {
               if (DBres.rows[0].access < access) {
-                console.log("failed acess")
+                console.log("failed access")
                 res.status(401).send(error(102))
               } else {
                 callback(DBres.rows[0])
@@ -408,7 +408,6 @@ app.post('/api/v1/assignSpot', (req, res) => {
         pool.query('UPDATE spots SET OWNER_EMAIL=$1, CURRENT_EMAIL=$1, inuse=true WHERE id=$2', [req.body.email, req.body.sid], (err, DBres) => { // TODO: not sure this query is gonna work cause of double $1.
           if (err) {
             console.log(err)
-
             res.status(400).send(error(107, JSON.stringify(err)))
           } else {
             res.send(JSON.stringify({"msg":"success"}))
@@ -463,7 +462,17 @@ app.post('/api/v1/createReport', (req, res) => {
   console.log(req.url);
   if (checkParams(res, req.body, ["note", "license_plate", "sid"])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
-      pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, $4, $5)', [user.email, req.body.spot_id, req.body.license_plate, (new Date()).getTime()], (err, DBres) => {
+      pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, $4, $5)', [user.email, req.body.note, req.body.spot_id, req.body.license_plate, (new Date()).getTime()], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg":"success"}))
+        }
+      });
+    });
+  } else if (checkParams(res, req.body, ["note", "sid"])) {
+    verifyToken(res, 0, req.headers.authorization, (user) => {
+      pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, \'\', $4)', [user.email, req.body.note, req.body.spot_id, (new Date()).getTime()], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
@@ -627,25 +636,33 @@ app.post('/api/v1/revokeRange', (req, res) => {
 });
 
 app.post('/api/v1/deleteAccount', (req, res) => {
+  email = "-1"
   if (checkParams(res, req.body, [])) {
+    verifyToken(res, 0, req.headers.authorization, (user) => {
+      email = user.email
+    });
+  } else if (checkParams(res, req.body, ["email"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
-      pool.query('UPDATE FROM users WHERE email=$1', [user.email], (err, DBres) => {
-        if (err) {
-          res.status(400).send(error(107, JSON.stringify(err)))
-        } else {
-          res.send(JSON.stringify({"msg":"success"}))
-        }
-        pool.query('SELECT * FROM spots', (err, DBres) => { // TODO: error checking.
-          for (var i = 0; i < DBres.length; i++) {
-            if (DBres.row[i].current_email == user.email && DBres.row[i].owner_email == user.email) {
-              pool.query('UPDATE spots SET current_email=\'\', inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
-            } else if (DBres.row[i].current_email == user.email) {
-              pool.query('UPDATE spots SET inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
-            } else if (DBres.row[i].owner_email == user.email) {
-              pool.query('UPDATE spots SET owner_email=\'\' FROM spots', (err, DBres) => {});
-            }
+      email = req.body.email
+    });
+  }
+  if (email != "-1") {
+    pool.query('UPDATE FROM users WHERE email=$1', [email], (err, DBres) => {
+      if (err) {
+        res.status(400).send(error(107, JSON.stringify(err)))
+      } else {
+        res.send(JSON.stringify({"msg":"success"}))
+      }
+      pool.query('SELECT * FROM spots', (err, DBres) => { // TODO: error checking.
+        for (var i = 0; i < DBres.length; i++) {
+          if (DBres.row[i].current_email == user.email && DBres.row[i].owner_email == user.email) {
+            pool.query('UPDATE spots SET current_email=\'\', inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
+          } else if (DBres.row[i].current_email == user.email) {
+            pool.query('UPDATE spots SET inuse=false, owner_email=\'\' FROM spots', (err, DBres) => {});
+          } else if (DBres.row[i].owner_email == user.email) {
+            pool.query('UPDATE spots SET owner_email=\'\' FROM spots', (err, DBres) => {});
           }
-        });
+        }
       });
     });
   }
@@ -669,6 +686,20 @@ app.post('/api/v1/deleteSpot', (req, res) => {
   if (checkParams(res, req.body, ["sid"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
       pool.query('DELETE FROM spots WHERE id=$1', [req.body.sid], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg": "success"}))
+        }
+      });
+    });
+  }
+});
+
+app.post('/api/v1/removeRange', (req, res) => {
+  if (checkParams(res, req.body, ["email"])) {
+    verifyToken(res, 2, req.headers.authorization, (user) => {
+      pool.query('DELETE FROM ranges WHERE email=$1', [req.body.email], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {

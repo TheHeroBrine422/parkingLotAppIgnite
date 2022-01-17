@@ -30,17 +30,17 @@ Authentication is done through the Authentication header, which expects `Bearer 
 1. TEST AND DOCUMENT. For testing, I am no longer doing it manually, and just writing testing using jest cause I need to do it anyway and most things need a lot of testing. Will do documentation after everything works.
   * remember to remove debug console.logs (both test.js and main.js) when finished writing testing code
   * finish writing failed parameter autogen.
-2. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
-4. Make Settings.DBcreds work. For some reason on my linux machine it is having issues.
-  * This issue only appears in main.js but not in test.js with jest. I have no clue why that would happen
-5. add checks for types in app.listen db reset?
-6. check google ouath token name param to make sure it is set properly in POST getTokenGoogle during acc creation.
-6. create New Routes
+1. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
+1. add checks for types in app.listen db reset?
+1. check google ouath token name param to make sure it is set properly in POST getTokenGoogle during acc creation.
+1. create New Routes
   * fix revokeToken for JWTs
-10. add expiration to JWT
-11. i dont think scheduling works properly for teachers.
-12. rate limits
-13. fix resetdb when tables are wrong
+1. add expiration to JWT
+1. i dont think scheduling works properly for teachers.
+1. rate limits
+1. fix resetdb when tables are wrong
+1. license_plate createReport optional?
+1. change ranges to be a list of sids rather then range of sids
 
 ### Other Potential Ideas
 

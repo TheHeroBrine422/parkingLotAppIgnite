@@ -543,8 +543,6 @@ app.post('/api/v1/getTokenGoogle', async (req, res) => {
     } else {
       res.status(400).send(error(109))
     }
-  } else {
-    res.status(400).send(error(106))
   }
 });
 

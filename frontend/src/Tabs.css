@@ -1,0 +1,32 @@
+.tabs {
+    background-color: #282c34;
+    width: 100%;
+    border-bottom: solid 2px #777;
+    height: 3vw;
+}
+
+.tabButtonLeft {
+    font-size: calc(2vmin);
+    background-color: #282c34;
+    color: white;
+    float: left;
+    width: 7%;
+    height: 3vw;
+    border:solid 1px #AAA;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tabButtonRight {
+    font-size: calc(2vmin);
+    background-color: #282c34;
+    color: white;
+    float: right;
+    width: 7%;
+    height: 3vw;
+    border:solid 1px #AAA;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

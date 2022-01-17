@@ -5,7 +5,7 @@ class Spot extends React.Component {
     render() {
         return (
             <div className="spot">
-                <p>{JSON.stringify(this.props.spot)}</p>
+                <text>{JSON.stringify(this.props.spot)}</text>
             </div>
         );
     }

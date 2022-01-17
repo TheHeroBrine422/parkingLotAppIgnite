@@ -1,9 +1,9 @@
-import './Main.css';
+import './Lot.css';
 import React from "react";
 import axios from "axios";
 import Spot from './Spot'
 
-class Main extends React.Component {
+class Lot extends React.Component {
     constructor(props) {
         super(props)
         this.getLot = this.getLot.bind(this)
@@ -30,13 +30,13 @@ class Main extends React.Component {
     render() {
         if (this.state != null) {
             return (
-                <div className="main">
+                <div className="lot">
                     {this.state.lot.spots.map(spot => (<Spot spot={spot} />))}
                 </div>
             );
         } else {
             return (
-                <div className="main">
+                <div className="lot">
                     <p>Loading...</p>
                 </div>
             );
@@ -44,4 +44,4 @@ class Main extends React.Component {
     }
 }
 
-export default Main;
+export default Lot;

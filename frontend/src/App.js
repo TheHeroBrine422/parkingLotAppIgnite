@@ -1,7 +1,9 @@
 import React from "react";
 import axios from "axios";
 import Signin from "./Signin";
-import Main from "./Main"
+import Lot from "./Lot"
+import TabBar from "./TabBar";
+import Settings from "./Settings";
 
 class App extends React.Component {
     constructor(props) {
@@ -9,30 +11,24 @@ class App extends React.Component {
         if (localStorage.getItem("token") == null) {
             this.state = {token: "", page: "Signin"}
         } else {
-            this.state = {token: localStorage.getItem("token"), page: "Main"}
+            this.state = {token: localStorage.getItem("token"), page: "Lot"}
             this.checkValidToken()
         }
 
-        this.signin = this.signin.bind(this)
         this.checkValidToken = this.checkValidToken.bind(this)
+        this.changePage = this.changePage.bind(this)
+        this.setToken = this.setToken.bind(this)
     }
 
-    async signin(res) {
-        let URLParams = new URLSearchParams();
-        URLParams.append("credential", res.tokenId)
-        let token = await axios.post("http://localhost:3001/api/v1/getTokenGoogle", URLParams)
-            .then(function (res) {
-                return res.data
-            })
-            .catch(function (error) {
-                return "fail"
-            })
-        if (token !== "fail") {
-            this.setState({token: token, page: "Main"})
-            localStorage.setItem("token", token)
-        } else {
-            await this.signin(res)
+    changePage(page) {
+        if (page !== this.state.page) {
+            this.setState({token: this.state.token, page: page})
         }
+    }
+
+    setToken(token) {
+        this.setState({token: token, page: this.state.page})
+        localStorage.setItem("token", token)
     }
 
     async checkValidToken() {
@@ -43,7 +39,7 @@ class App extends React.Component {
                 return "pass"
             })
             .catch(function (error) {
-                if (error.response != null && error.response.status == 401) {
+                if (error.response != null && error.response.status === 401) {
                     return "badToken"
                 } else {
                     return "failedReq"
@@ -53,20 +49,37 @@ class App extends React.Component {
             this.checkValidToken()
         } else if (status === "badToken") {
             this.setState({token: "", page: "Signin"})
+        } else {
+            this.setState({token: this.state.token, page: "Lot"})
         }
     }
 
     render() {
-        if (this.state.page === "Signin") {
-            return (
-                <Signin signin={this.signin}/>
-            );
-        } else if (this.state.page === "Main") {
-            return (
-                <Main token={this.state.token}/>
-            );
-        } else {
-            return (<p>Something went horribly wrong.</p>)
+        switch (this.state.page) {
+            case "Signin":
+                return (
+                    <Signin signin={this.signin} changePage={this.changePage} setToken={this.setToken}/>
+                );
+            case "Lot":
+                return (
+                    <div>
+                        <TabBar token={this.state.token} changePage={this.changePage} setToken={this.setToken}/>
+                        <Lot token={this.state.token} changePage={this.changePage}/>
+                    </div>
+                );
+            case "Settings":
+                return (
+                    <div>
+                        <TabBar token={this.state.token} changePage={this.changePage} setToken={this.setToken}/>
+                        <Settings token={this.state.token} changePage={this.changePage}/>
+                    </div>
+                )
+            default:
+                this.setState({token: this.state.token, page: "Signin"})
+                return (
+                    <p>Something has went wrong. Trying to fix.</p>
+                )
+
         }
     }
 }

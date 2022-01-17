@@ -14,7 +14,30 @@ const pool = new Pool(settings.DBCreds)
 routes = [["GET", "getLot", ["JWT"], ["0"]], // this should probably be in Settings.json
           ["POST", "takeSpot", ["sid", "JWT"], [4, "0"]],
           ["POST", "releaseSpot", ["sid", "JWT"], [4, "0"]],
-          ["GET", "getAllUsers", ["JWT"], ["3"]]];
+          ["GET", "getAllUsers", ["JWT"], ["3"]],
+          ["POST", "setLicensePlate", ["JWT", "license_plate"], ["3", "ABC123"]],
+          ["GET", "getUser", ["JWT"], ["3"]],
+          ["GET", "getUserByPlate", ["JWT", "license_plate"], ["3", "TEST000"]],
+          ["GET", "getUsers", ["JWT", "emails"], ["3", "[\"parkingdev@bentonvillek12.org\", \"parkingtestone@bentonvillek12.org\"]"]],
+          ["POST", "assignSpot", ["JWT", "sid", "email"], ["3", 0, "parkingdev@bentonvillek12.org"]],
+          ["POST", "createBlankUser", ["JWT", "email", "access"], ["3", "parkingtestthree@bentonvillek12.org", 3]],
+          ["POST", "createReport", ["JWT", "note", "license_plate", "sid"], ["3", "Unknown License Plate", "ABC123", 1]],
+          ["POST", "deleteReport", ["JWT", "rid"], ["3", "1"]],
+          ["GET", "getReports", ["JWT"], ["3"]],
+          ["POST", "revokeToken", ["JWT"], ["3"]],
+          ["POST", "setAccess", ["JWT", "email", "access"], ["3", "parkingtestzero@bentonvillek12.org", 1]],
+          ["POST", "deleteAccount", ["JWT"], ["1"]],
+          ["POST", "unassignSpot", ["JWT"], ["3"]],
+          ["GET", "getSchedule", ["JWT"], ["3"]],
+          ["POST", "releaseSpotFuture", ["JWT"], ["3"]],
+          ["POST", "removeFutureReleasedSpot", ["JWT"], ["3"]],
+          ["POST", "assignRange", ["JWT"], ["3"]],
+          ["POST", "removeRange", ["JWT"], ["3"]],
+          ["GET", "getRanges", ["JWT"], ["3"]],
+          ["GET", "forceResetSpots", ["JWT"], ["3"]]
+          ];
+
+          //["", "", ["JWT"], ["3"]],
 
 beforeEach(async () => {
   await get("resetDB", {}, JWTs["3"])

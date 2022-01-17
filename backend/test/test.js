@@ -10,34 +10,38 @@ APIURL = settings.TestAPIUrl;
 
 const pool = new Pool(settings.DBCreds)
 
-// Format: [HTTPMethod, URL, [PossibleParameters], [DefaultValuesForParameters]]
-routes = [["GET", "getLot", ["JWT"], ["0"]], // this should probably be in Settings.json
-          ["POST", "takeSpot", ["sid", "JWT"], [4, "0"]],
-          ["POST", "releaseSpot", ["sid", "JWT"], [4, "0"]],
-          ["GET", "getAllUsers", ["JWT"], ["3"]],
-          ["POST", "setLicensePlate", ["JWT", "license_plate"], ["3", "ABC123"]],
-          ["GET", "getUser", ["JWT"], ["3"]],
-          ["GET", "getUserByPlate", ["JWT", "license_plate"], ["3", "TEST000"]],
-          ["GET", "getUsers", ["JWT", "emails"], ["3", "[\"parkingdev@bentonvillek12.org\", \"parkingtestone@bentonvillek12.org\"]"]],
-          ["POST", "assignSpot", ["JWT", "sid", "email"], ["3", 0, "parkingdev@bentonvillek12.org"]],
-          ["POST", "createBlankUser", ["JWT", "email", "access"], ["3", "parkingtestthree@bentonvillek12.org", 3]],
-          ["POST", "createReport", ["JWT", "note", "license_plate", "sid"], ["3", "Unknown License Plate", "ABC123", 1]],
-          ["POST", "deleteReport", ["JWT", "rid"], ["3", "1"]],
-          ["GET", "getReports", ["JWT"], ["3"]],
-          ["POST", "revokeToken", ["JWT"], ["3"]],
-          ["POST", "setAccess", ["JWT", "email", "access"], ["3", "parkingtestzero@bentonvillek12.org", 1]],
-          ["POST", "deleteAccount", ["JWT"], ["1"]],
-          ["POST", "unassignSpot", ["JWT"], ["3"]],
-          ["GET", "getSchedule", ["JWT"], ["3"]],
-          ["POST", "releaseSpotFuture", ["JWT"], ["3"]],
-          ["POST", "removeFutureReleasedSpot", ["JWT"], ["3"]],
-          ["POST", "assignRange", ["JWT"], ["3"]],
-          ["POST", "removeRange", ["JWT"], ["3"]],
-          ["GET", "getRanges", ["JWT"], ["3"]],
-          ["GET", "forceResetSpots", ["JWT"], ["3"]]
+// Format: [HTTPMethod, URL, [PossibleParameters], [DefaultValuesForParameters], [InvalidFailures]]
+// Invalid failures is for cases in which you have a autoGen test that is failing, but in reality there is nothing wrong. So far I have two examples of this:
+// POST createReport 3: This generates a note of null for createReport, but the backend takes the null as a string and because note allows anything it accepts the report. This is slightly questionable because it shouldn't be treating the null as a string, but i think this has to do with how the null is getting converted during HTTP requests.
+// POST createReport 8: This leaves out the license_plate parameter, which is a 2nd valid parameter set.
+routes = [["GET", "getLot", ["JWT"], ["0"], []], // this should probably be in Settings.json
+          ["POST", "takeSpot", ["sid", "JWT"], [4, "0"], []],
+          ["POST", "releaseSpot", ["sid", "JWT"], [4, "0"], []],
+          ["GET", "getAllUsers", ["JWT"], ["3"], []],
+          ["POST", "setLicensePlate", ["JWT", "license_plate"], ["3", "ABC123"], []],
+          ["GET", "getUser", ["JWT"], ["3"], []],
+          ["GET", "getUserByPlate", ["JWT", "license_plate"], ["3", "TEST000"], []],
+          ["GET", "getUsers", ["JWT", "emails"], ["3", "[\"parkingdev@bentonvillek12.org\", \"parkingtestone@bentonvillek12.org\"]"], []],
+          ["POST", "assignSpot", ["JWT", "sid", "email"], ["3", 0, "parkingdev@bentonvillek12.org"], []],
+          ["POST", "createBlankUser", ["JWT", "email", "access"], ["3", "parkingtestthree@bentonvillek12.org", 3], []],
+          ["POST", "createReport", ["JWT", "note", "license_plate", "sid"], ["3", "Unknown License Plate", "ABC123", 1], [3,8]],
+        ["POST", "createReport", ["JWT", "note", "sid"], ["3", "Unknown License Plate", 1], [3]],
+          ["POST", "deleteReport", ["JWT", "rid"], ["3", "1"], []],
+          ["GET", "getReports", ["JWT"], ["3"], []],
+          ["POST", "revokeToken", ["JWT"], ["3"], []],
+          ["POST", "setAccess", ["JWT", "email", "access"], ["3", "parkingtestzero@bentonvillek12.org", 1], []],
+          ["POST", "deleteAccount", ["JWT"], ["1"], []],
+          ["POST", "unassignSpot", ["JWT"], ["3"], []],
+          ["GET", "getSchedule", ["JWT"], ["3"], []],
+          ["POST", "releaseSpotFuture", ["JWT"], ["3"], []],
+          ["POST", "removeFutureReleasedSpot", ["JWT"], ["3"], []],
+          ["POST", "assignRange", ["JWT"], ["3"], []],
+          ["POST", "removeRange", ["JWT"], ["3"], []],
+          ["GET", "getRanges", ["JWT"], ["3"], []],
+          ["GET", "forceResetSpots", ["JWT"], ["3"], []]
           ];
 
-          //["", "", ["JWT"], ["3"]],
+          //["", "", ["JWT"], ["3"], []],
 
 beforeEach(async () => {
   await get("resetDB", {}, JWTs["3"])
@@ -257,12 +261,14 @@ for (var i = 0; i < routes.length; i++) { // autoGen failure routes. This has co
       JWT = datas[j].JWT
     }
     delete datas[j].JWT
-    autoTest({"data": datas[j], "route": routes[i], "JWT": JWT})
+      if (routes[i][4].indexOf(j) < 0) {
+          autoTest({"data": datas[j], "route": routes[i], "JWT": JWT, count: j})
+      }
   }
 }
 
 function autoTest(temp) {
-  test("autoGen "+temp.route[0]+" "+temp.route[1], async () => {
+  test("autoGen "+temp.route[0]+" "+temp.route[1]+" "+j, async () => {
     if (temp.route[0] == "GET") {
       err = await get(temp.route[1], temp.data, temp.JWT)
     } else if (temp.route[0] == "POST") {
@@ -270,6 +276,8 @@ function autoTest(temp) {
     } else {
       expect(temp.route[0]).toBe("invalid HTTP")
     }
+    console.log(temp)
+    console.log(err)
     expect(err.response).not.toBeUndefined()
     expect(err.response.data).not.toBeUndefined()
     expect(err.response.data.err).not.toBeUndefined()

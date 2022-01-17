@@ -97,7 +97,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 
 ```json
 {
-  "email":"abc@bentonvillek12.org",
+  "email":"abc@bentonvillek12.org"
 }
 ```
 

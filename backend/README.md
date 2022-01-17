@@ -59,38 +59,39 @@ Authentication is done through the Authentication header, which expects `Bearer 
 
 ? means in progress.
 
-| Route                         | Implemented | Tested | Documented | Added to AutoTest (test/test.js) |
-|-------------------------------| ----- | ---- | ----- | ----- |
-| GET getLot                    | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
-| GET getAllUsers               | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
-| POST takeSpot                 | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark:
-| POST setLicensePlate          | :heavy_check_mark: | :x: | :x: | :x:
-| POST releaseSpot              | :heavy_check_mark: | :heavy_check_mark: | :x: | :heavy_check_mark: |
-| GET getUser                   | :heavy_check_mark: | :x: | :x: | :x: |
-| GET getUserByPlate            | :heavy_check_mark: | :x: | :x: | :x:
-| GET getUsers                  | :heavy_check_mark: | :x: | :x: | :x:
-| POST assignSpot               | :heavy_check_mark: | :x: | :x: | :x:
-| POST createBlankUser          | :heavy_check_mark: | :x: | :x: | :x:
-| POST createReport             | :heavy_check_mark: | :x: | :x: | :x:
-| POST deleteReport             | :heavy_check_mark: | :x: | :x: | :x:
-| GET getReports                | :heavy_check_mark: | :x: | :x: | :x:
-| POST getTokenGoogleCSRF       | :heavy_check_mark: | :x: | :x: | NA (puppeteer maybe?)
-| POST getTokenGoogle           | :heavy_check_mark: | :heavy_check_mark: | :x: | NA (puppeteer maybe?)
-| POST createArbitraryUser      | :heavy_check_mark: | :x: | :x: | :x:
-| POST revokeToken              | :x: | :x: | :x: | :x:
-| POST setAccess                | :heavy_check_mark: | :x: | :x: | :x:
-| POST deleteAccount            | :heavy_check_mark: | :x: | :x: | :x:
-| POST unassignSpot             | :heavy_check_mark: | :x: | :x: | :x:
-| POST createSpot               | :heavy_check_mark: | :x: | :x: | :x:
-| POST deleteSpot               | :heavy_check_mark: | :x: | :x: | :x:
-| GET getSchedule               | :heavy_check_mark: | :x: | :x: | :x:
-| POST releaseSpotFuture        | :heavy_check_mark: | :x: | :x: | :x:
-| POST removeFutureReleasedSpot | :heavy_check_mark: | :x: | :x: | :x:
-| POST assignRange              | :heavy_check_mark: | :x: | :x: | :x:
-| POST removeRange              | :heavy_check_mark: | :x: | :x: | :x:
-| GET getRanges                 | :heavy_check_mark: | :x: | :x: | :x:
-| GET forceResetSpots           | :heavy_check_mark: | :x: | :x: | :x:
-| GET resetDB                   | :heavy_check_mark: | :x: | :x: | :x:
+| Route                         | Implemented        | Tested             | Documented | Added to AutoTest (test/test.js) | Notes                                                  |
+|-------------------------------|--------------------|--------------------|------------|----------------------------------|--------------------------------------------------------|
+| GET getLot                    | :heavy_check_mark: | :heavy_check_mark: | :x:        | :heavy_check_mark:               |                                                        |
+| GET getAllUsers               | :heavy_check_mark: | :heavy_check_mark: | :x:        | :heavy_check_mark:               |                                                        |
+| POST takeSpot                 | :heavy_check_mark: | :heavy_check_mark: | :x:        | :heavy_check_mark:               |                                                        |
+| POST setLicensePlate          | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST releaseSpot              | :heavy_check_mark: | :heavy_check_mark: | :x:        | :heavy_check_mark:               |                                                        |
+| GET getUser                   | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET getUserByPlate            | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET getUsers                  | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST assignSpot               | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST createBlankUser          | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST createReport             | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST deleteReport             | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET getReports                | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST getTokenGoogleCSRF       | :heavy_check_mark: | :x:                | :x:        | NA (puppeteer maybe?)            | not really being used other then googleSignInTest.html |
+| POST getTokenGoogle           | :heavy_check_mark: | :heavy_check_mark: | :x:        | NA (puppeteer maybe?)            |                                                        |
+| POST createArbitraryUser      | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST revokeToken              | :x:                | :x:                | :x:        | :x:                              |                                                        |
+| POST setAccess                | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST deleteAccount            | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST unassignSpot             | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST createSpot               | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST deleteSpot               | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET getSchedule               | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST releaseSpotFuture        | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST removeFutureReleasedSpot | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST assignRange              | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST removeRange              | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET getRanges                 | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET forceResetSpots           | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| GET resetDB                   | :heavy_check_mark: | :x:                | :x:        | :x:                              |                                                        |
+| POST changeSection            | :x:                | :x:                | :x:        | :x:                              |                                                        |
 
 # JWT User Object
 

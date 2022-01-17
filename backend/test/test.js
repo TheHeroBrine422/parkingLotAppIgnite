@@ -41,13 +41,13 @@ routes = [["GET", "getLot", ["JWT"], ["0"]], // this should probably be in Setti
 
 beforeEach(async () => {
   await get("resetDB", {}, JWTs["3"])
-  await post("createSpot", {"name": "1 AM"}, JWTs["3"])
-  await post("createSpot", {"name": "2 AM"}, JWTs["3"])
-  await post("createSpot", {"name": "1 PM"}, JWTs["3"])
-  await post("createSpot", {"name": "2 PM"}, JWTs["3"])
-  test2 = await post("createArbitraryUser", {"email": "parkingtesttwo@bentonvillek12.org", "access": "2", "name": "TEST2 NOTAPERSON", "license_plate": "TEST222"}, JWTs["3"])
-  test1 = await post("createArbitraryUser", {"email": "parkingtestone@bentonvillek12.org", "access": "1", "name": "TEST1 NOTAPERSON", "license_plate": "TEST111"}, JWTs["3"])
-  test0 = await post("createArbitraryUser", {"email": "parkingtestzero@bentonvillek12.org", "access": "0", "name": "TEST0 NOTAPERSON", "license_plate": "TEST000"}, JWTs["3"])
+  await post("createSpot", {"number": "1", "section": "AM"}, JWTs["3"])
+  await post("createSpot", {"number": "2", "section": "AM"}, JWTs["3"])
+  await post("createSpot", {"number": "1", "section": "PM"}, JWTs["3"])
+  await post("createSpot", {"number": "2", "section": "PM"}, JWTs["3"])
+  test2 = await post("createArbitraryUser", {"email": "parkingtesttwo@bentonvillek12.org", "access": "2", "name": "TEST2 NOTAPERSON", "license_plate": "TEST222", "section": "AM"}, JWTs["3"])
+  test1 = await post("createArbitraryUser", {"email": "parkingtestone@bentonvillek12.org", "access": "1", "name": "TEST1 NOTAPERSON", "license_plate": "TEST111", "section": "PM"}, JWTs["3"])
+  test0 = await post("createArbitraryUser", {"email": "parkingtestzero@bentonvillek12.org", "access": "0", "name": "TEST0 NOTAPERSON", "license_plate": "TEST000", "section": "PM"}, JWTs["3"])
   JWTs["2"] = test2.data
   JWTs["1"] = test1.data
   JWTs["0"] = test0.data
@@ -66,33 +66,38 @@ test('', async () => {
 
 test('getLot', async () => {
   res = await get("getLot", {}, JWTs["3"])
+    console.log(res.data)
   spots = res.data.spots
   users = res.data.users
   expectedSpots = [
         {
           id: 1,
-          name: '1 AM',
+          number: '1',
+          section: 'AM',
           owner_email: 'parkingdev@bentonvillek12.org',
           inuse: true,
           current_email: 'parkingdev@bentonvillek12.org'
         },
         {
           id: 2,
-          name: '2 AM',
+            number: '2',
+            section: 'AM',
           owner_email: 'parkingtesttwo@bentonvillek12.org',
           inuse: true,
           current_email: 'parkingtesttwo@bentonvillek12.org'
         },
         {
           id: 3,
-          name: '1 PM',
+            number: '1',
+            section: 'PM',
           owner_email: 'parkingtestone@bentonvillek12.org',
           inuse: true,
           current_email: 'parkingtestone@bentonvillek12.org'
         },
         {
           id: 4,
-          name: '2 PM',
+            number: '2',
+            section: 'PM',
           owner_email: 'parkingtestzero@bentonvillek12.org',
           inuse: true,
           current_email: 'parkingtestzero@bentonvillek12.org'
@@ -120,6 +125,7 @@ test('getLot', async () => {
           license_plate: 'TEST000'
         }
       ];
+
   expect(spots.length).toBe(expectedSpots.length)
   expect(users.length).toBe(expectedUsers.length)
   for (var i = 0; i < expectedUsers.length; i++) {
@@ -138,28 +144,33 @@ test('getAllUsers - success - access lvl 2', async () => {
           email: 'parkingdev@bentonvillek12.org',
           name: 'DEVELOPER NOTAPERSON',
           access: 3,
-          license_plate: 'ABC123'
+          license_plate: 'ABC123',
+            section: 'AM'
         },
         {
           email: 'parkingtesttwo@bentonvillek12.org',
           name: 'TEST2 NOTAPERSON',
           access: 2,
-          license_plate: 'TEST222'
+          license_plate: 'TEST222',
+            section: 'AM'
         },
         {
           email: 'parkingtestone@bentonvillek12.org',
           name: 'TEST1 NOTAPERSON',
           access: 1,
-          license_plate: 'TEST111'
+          license_plate: 'TEST111',
+            section: 'PM'
         },
         {
           email: 'parkingtestzero@bentonvillek12.org',
           name: 'TEST0 NOTAPERSON',
           access: 0,
-          license_plate: 'TEST000'
+          license_plate: 'TEST000',
+            section: 'PM'
         }
       ];
   users = res.data
+    console.log(users)
   expect(res.data.length).toBe(expectedUsers.length)
   for (var i = 0; i < expectedUsers.length; i++) {
     expect(users.findIndex(a => objEqual(a, expectedUsers[i]))).toBeGreaterThanOrEqual(0) // dont love this due to how output works, but easier to write so idk.
@@ -184,7 +195,8 @@ test('releaseSpot - success - student', async () => {
   for (var i = 0; i < spots.length; i++) {
     if (spots[i].owner_email == "parkingtestzero@bentonvillek12.org") {
       found = true;
-      expect(spots[i].name).toBe("2 PM")
+        expect(spots[i].number).toBe("2")
+        expect(spots[i].section).toBe("PM")
       expect(spots[i].inuse).toBe(false)
       expect(spots[i].current_email).toBe("")
       break;
@@ -209,7 +221,8 @@ test('takeSpot - success - student', async () => {
   for (var i = 0; i < spots.length; i++) {
     if (spots[i].id == 3) {
       found = true;
-      expect(spots[i].name).toBe("1 PM")
+      expect(spots[i].number).toBe("1")
+        expect(spots[i].section).toBe("PM")
       expect(spots[i].inuse).toBe(true)
       expect(spots[i].current_email).toBe("parkingtestzero@bentonvillek12.org")
       expect(spots[i].owner_email).toBe("parkingtestone@bentonvillek12.org")
@@ -249,7 +262,7 @@ for (var i = 0; i < routes.length; i++) { // autoGen failure routes. This has co
 }
 
 function autoTest(temp) {
-  test(temp.route[0]+" "+temp.route[1]+" autoGen", async () => {
+  test("autoGen "+temp.route[0]+" "+temp.route[1], async () => {
     if (temp.route[0] == "GET") {
       err = await get(temp.route[1], temp.data, temp.JWT)
     } else if (temp.route[0] == "POST") {
@@ -306,4 +319,10 @@ function objEqual(a,b) { // maybe i should just use lodash for this.
     }
   }
   return true;
+}
+
+function delay(ms){
+    return new Promise(resolve=>{
+        setTimeout(resolve,ms)
+    })
 }

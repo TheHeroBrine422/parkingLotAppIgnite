@@ -44,8 +44,8 @@ paramRegex = {
   "day": /[0-9]{1,2}-[0-9]{1,2}-20[0-9]{2}/,
   "schid": /[0-9]*/,
   "name": /[a-zA-Z 0-9]*/,
-  "section": /[AP]{1}M/,
-  "number": /[0-9]{1-3}/
+  "section": /[AP]M/,
+  "number": /[0-9]{1,3}/
 }
 
 errors = {100: "Invalid Number of parameters.",
@@ -71,15 +71,24 @@ function isValidDate(d) {
 
 function checkParams(res, params, paramList) {
   if (Object.keys(params).length != paramList.length) {
-    console.log(2)
     res.status(400).send(error(100))
     return false;
   }
   for (var i = 0; i < paramList.length; i++) {
     if (params[paramList[i]] == null || params[paramList[i]] == "" || params[paramList[i]].match(paramRegex[paramList[i]]) == null || params[paramList[i]].match(paramRegex[paramList[i]])[0] != params[paramList[i]]) {
-      console.log(params[paramList[i]])
-      console.log(3)
       res.status(400).send(error(101,paramList[i]))
+      return false;
+    }
+  }
+  return true;
+}
+
+function checkParamsNoRes(params, paramList) {
+  if (Object.keys(params).length != paramList.length) {
+    return false;
+  }
+  for (var i = 0; i < paramList.length; i++) {
+    if (params[paramList[i]] == null || params[paramList[i]] == "" || params[paramList[i]].match(paramRegex[paramList[i]]) == null || params[paramList[i]].match(paramRegex[paramList[i]])[0] != params[paramList[i]]) {
       return false;
     }
   }
@@ -478,7 +487,7 @@ app.post('/api/v1/createBlankUser', (req, res) => {
 
 app.post('/api/v1/createReport', (req, res) => {
   console.log(req.url);
-  if (checkParams(res, req.body, ["note", "license_plate", "sid"])) {
+  if (checkParamsNoRes(req.body, ["note", "license_plate", "sid"])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
       pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, $4, $5)', [user.email, req.body.note, req.body.spot_id, req.body.license_plate, (new Date()).getTime()], (err, DBres) => {
         if (err) {
@@ -488,7 +497,7 @@ app.post('/api/v1/createReport', (req, res) => {
         }
       });
     });
-  } else if (checkParams(res, req.body, ["note", "sid"])) {
+  } else if (checkParamsNoRes(req.body, ["note", "sid"])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
       pool.query('INSERT INTO reports (AUTHOR_EMAIL, NOTE, SPOT_ID, LICENSE_PLATE, CREATION_DATE) VALUES ($1, $2, $3, \'\', $4)', [user.email, req.body.note, req.body.spot_id, (new Date()).getTime()], (err, DBres) => {
         if (err) {
@@ -498,6 +507,8 @@ app.post('/api/v1/createReport', (req, res) => {
         }
       });
     });
+  } else {
+    res.status(400).send(error(101))
   }
 });
 
@@ -655,14 +666,16 @@ app.post('/api/v1/revokeRange', (req, res) => {
 
 app.post('/api/v1/deleteAccount', (req, res) => {
   email = "-1"
-  if (checkParams(res, req.body, [])) {
+  if (checkParamsNoRes(req.body, [])) {
     verifyToken(res, 0, req.headers.authorization, (user) => {
       email = user.email
     });
-  } else if (checkParams(res, req.body, ["email"])) {
+  } else if (checkParamsNoRes(res, req.body, ["email"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
       email = req.body.email
     });
+  } else {
+    res.status(400).send(error(101))
   }
   if (email != "-1") {
     pool.query('UPDATE FROM users WHERE email=$1', [email], (err, DBres) => {
@@ -689,7 +702,7 @@ app.post('/api/v1/deleteAccount', (req, res) => {
 app.post('/api/v1/createSpot', (req, res) => {
   if (checkParams(res, req.body, ["number", "section"])) {
     verifyToken(res, 2, req.headers.authorization, (user) => {
-      pool.query('INSERT INTO spots (NUMBER, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES ($1, \'\', false, \'\')', [req.body.number, req.body.section], (err, DBres) => {
+      pool.query('INSERT INTO spots (NUMBER, SECTION, OWNER_EMAIL, INUSE, CURRENT_EMAIL) VALUES ($1, $2, \'\', false, \'\')', [req.body.number, req.body.section], (err, DBres) => {
         if (err) {
           res.status(400).send(error(107, JSON.stringify(err)))
         } else {
@@ -834,6 +847,7 @@ function resetDB() {
   SQLquery = fs.readFileSync("resetDB.sql", 'utf8')
   pool.query(SQLquery, (err, DBres) => {
     if (err) {
+      console.log(err)
       console.log("resetDB Failed")
     }
   });

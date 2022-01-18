@@ -329,8 +329,3 @@ function objEqual(a,b) { // maybe i should just use lodash for this.
   return true;
 }
 
-function delay(ms){
-    return new Promise(resolve=>{
-        setTimeout(resolve,ms)
-    })
-}

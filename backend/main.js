@@ -259,6 +259,20 @@ app.post('/api/v1/setLicensePlate', (req, res) => {
   }
 });
 
+app.post('/api/v1/setSection', (req, res) => {
+  if (checkParams(res, req.body, ["section"])) {
+    verifyToken(res, 0, req.headers.authorization, (user) => {
+      pool.query('UPDATE users SET section=$1 WHERE email=$2', [req.body.section, user.email], (err, DBres) => {
+        if (err) {
+          res.status(400).send(error(107, JSON.stringify(err)))
+        } else {
+          res.send(JSON.stringify({"msg":"success"}))
+        }
+      });
+    });
+  }
+});
+
 app.post('/api/v1/releaseSpotFuture', (req, res) => {
   if (checkParams(res, req.body, ["sid", "day"])) {
     if (isValidDate(new Date(req.body.day))) {

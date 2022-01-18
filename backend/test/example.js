@@ -17,8 +17,11 @@ APIURL = settings.TestAPIUrl;
   console.log(res.data)
   res = await post("createSpot", {"name": "2 PM"}, JWTs["3"])
   console.log(res.data)*/
-  res = await  post("createSpot", {"number": "1", "section": "AM"}, JWTs["3"])
-  console.log(res)
+  for (let i = 41; i < 120; i++) {
+    res = await  post("createSpot", {"number": i.toString(), "section": "AM"}, JWTs["3"])
+    console.log(res)
+  }
+
   /*res = await post("assignSpot", {"email": "parkingdev@bentonvillek12.org", "sid": "1"}, JWTs["3"])
   console.log(res.data)
   res = await post("assignSpot", {"email": "jonescal@bentonvillek12.org", "sid": "2"}, JWTs["3"])

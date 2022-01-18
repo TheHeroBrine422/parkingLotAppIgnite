@@ -34,7 +34,7 @@ class App extends React.Component {
     }
 
     async getUser() { // also checks if token is valid. Ran anytime the page is changed. TODO: refresh token?
-        let user = await axios.get("http://localhost:3001/api/v1/getSelf", {
+        let user = await axios.get("http://192.168.1.236:3001/api/v1/getSelf", {
             headers: {authorization: "Bearer " + this.state.token}
         })
             .then(function (res) {

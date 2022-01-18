@@ -9,31 +9,10 @@ class Signin extends React.Component {
         this.signin = this.signin.bind(this)
     }
 
-    async checkValidToken() {
-        let status = await axios.get("http://localhost:3001/api/v1/getLot", {
-            headers: {authorization: "Bearer " + this.state.token}
-        })
-            .then(function (res) {
-                return "pass"
-            })
-            .catch(function (error) {
-                if (error.response != null && error.response.status === 401) {
-                    return "badToken"
-                } else {
-                    return "failedReq"
-                }
-            });
-        if (status === "failedReq") {
-            this.checkValidToken()
-        } else if (status === "badToken") {
-            this.setState({token: "", page: "Signin"})
-        }
-    }
-
     async signin(res) {
         let URLParams = new URLSearchParams();
         URLParams.append("credential", res.tokenId)
-        let token = await axios.post("http://localhost:3001/api/v1/getTokenGoogle", URLParams)
+        let token = await axios.post("http://192.168.1.236:3001/api/v1/getTokenGoogle", URLParams)
             .then(function (res) {
                 return res.data
             })

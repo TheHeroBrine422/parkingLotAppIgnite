@@ -3,30 +3,30 @@
     width: 100%;
     border-bottom: solid 2px #444;
     height: 3vw;
+    max-height: 50px;
+    min-height: 40px;
 }
 
-.tabButtonLeft {
-    font-size: calc(2vmin);
+.tabButton {
+    font-size: max(calc(2vmin), 15px);
     background-color: #2d2d2d;
     color: white;
-    float: left;
     width: 7%;
     height: 3vw;
+    max-height: 50px;
+    min-height: 40px;
+    max-width: 120px;
+    min-width: 90px;
     border:solid 1px #777;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.tabButtonRight {
-    font-size: calc(2vmin);
-    background-color: #2d2d2d;
-    color: white;
+.right {
     float: right;
-    width: 7%;
-    height: 3vw;
-    border:solid 1px #AAA;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+.left {
+    float: left;
 }

@@ -4,6 +4,6 @@
     width: 100%;
     top: 0px;
     flex-direction: column;
-    font-size: calc(10px + 2vmin);
     color: white;
+    padding-left: 1%;
 }

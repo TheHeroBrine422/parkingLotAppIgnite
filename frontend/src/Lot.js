@@ -11,31 +11,32 @@ class Lot extends React.Component {
             lot: {spots: [], users: []}
         }
         this.getLot()
+        setInterval(this.getLot, 1000)
     }
 
     async getLot() {
         let URLParams = new URLSearchParams();
         let lot = "fail"
-        while (lot === "fail") {
-            lot = await axios.get("http://localhost:3001/api/v1/getLot", {
-                params: URLParams,
-                headers: {authorization: "Bearer " + this.props.token}
+        lot = await axios.get("http://192.168.1.236:3001/api/v1/getLot", {
+            params: URLParams,
+            headers: {authorization: "Bearer " + this.props.token}
+        })
+            .then(function (res) {
+                return res.data
             })
-                .then(function (res) {
-                    return res.data
-                })
-                .catch(function (error) {
-                    return "fail"
-                });
+        if (lot !== "fail") {
+            lot.spots.sort(function (a, b) {
+                return Number(a.number) - Number(b.number)
+            })
+            this.setState({lot: lot})
         }
-        this.setState({lot: lot})
     }
     render() {
         return (
             <div>
                 <text>Green is free, red is inuse, white is free and you are owner, cyan is inuse and you are owner, and black is your current spot</text>
             <div className="lot">
-                {this.state.lot.spots.map(spot => (<Spot spot={spot} user={this.props.user}/>))}
+                {this.state.lot.spots.map(spot => (<Spot spot={spot} users={this.state.lot.users} user={this.props.user} token={this.props.token} getLot={this.getLot}/>))}
             </div>
             </div>
         );

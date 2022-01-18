@@ -91,7 +91,7 @@ Authentication is done through the Authentication header, which expects `Bearer 
 | GET getRanges                 | :heavy_check_mark: | :x:                | :x:        | :x:                          | :heavy_check_mark:    |                                                        |
 | GET forceResetSpots           | :heavy_check_mark: | :x:                | :x:        | :x:                          | :heavy_check_mark:    |                                                        |
 | GET resetDB                   | :heavy_check_mark: | :x:                | :x:        | :x:                          |                       |                                                        |
-| POST changeSection            | :x:                | :x:                | :x:        | :x:                          |                       |                                                        |
+| POST setSection               | :heavy_check_mark: | :x:                | :x:        | :x:                          |                       |                                                        |
 
 # Testing:
 

@@ -15,7 +15,7 @@ class Settings extends React.Component {
     }
 
     handleChangeLicensePlate(e) {
-        this.setState({licensePlate: e.target.value, section: this.state.section, err: this.state.err})
+        this.setState({licensePlate: e.target.value.toUpperCase(), section: this.state.section, err: this.state.err})
     }
 
     handleChangeSection(e) {

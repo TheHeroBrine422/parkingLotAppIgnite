@@ -1,4 +1,4 @@
-import './Spot.css';
+import './Lot.css';
 import React from "react";
 import Popup from "reactjs-popup";
 import Button from '@mui/material/Button';

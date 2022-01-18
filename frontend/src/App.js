@@ -58,7 +58,7 @@ class App extends React.Component {
         switch (this.state.page) {
             case "Signin":
                 return (
-                    <Signin signin={this.signin} changePage={this.changePage} setToken={this.setToken}/>
+                    <Signin changePage={this.changePage} setToken={this.setToken}/>
                 );
             case "Lot":
                 return (
@@ -75,7 +75,7 @@ class App extends React.Component {
                     </div>
                 )
             default:
-                this.setState({token: this.state.token, page: "Signin"})
+                this.setState({token: this.state.token, page: "Lot"})
                 return (
                     <p>Something has went wrong. Trying to fix.</p>
                 )

@@ -32,14 +32,12 @@ Authentication is done through the Authentication header, which expects `Bearer 
   * finish writing failed parameter autogen.
 1. add extra checks for db errors. Add SELECT after modification statement to check that changes worked.
 1. add checks for types in app.listen db reset?
-1. check google ouath token name param to make sure it is set properly in POST getTokenGoogle during acc creation.
 1. create New Routes
   * fix revokeToken for JWTs
 1. add expiration to JWT
 1. i dont think scheduling works properly for teachers.
 1. rate limits
 1. fix resetdb when tables are wrong
-1. license_plate createReport optional?
 1. change ranges to be a list of sids rather then range of sids
 
 ### Other Potential Ideas

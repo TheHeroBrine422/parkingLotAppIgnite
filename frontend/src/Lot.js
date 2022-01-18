@@ -34,7 +34,11 @@ class Lot extends React.Component {
     render() {
         return (
             <div>
-                <text>Green is free, red is inuse, white is free and you are owner, cyan is inuse and you are owner, and black is your current spot</text>
+                <text className="free-text">Green is free. </text>
+                <text className="inuse-text">Red is in use. </text>
+                <text className="free-owned-text">White is free and your assigned spot. </text>
+                <text className="inuse-owned-text">Cyan is in use and your assigned spot. </text>
+                <text className="current-text">Black is your current spot.</text>
             <div className="lot">
                 {this.state.lot.spots.map(spot => (<Spot spot={spot} users={this.state.lot.users} user={this.props.user} token={this.props.token} getLot={this.getLot}/>))}
             </div>

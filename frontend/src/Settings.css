@@ -1,9 +1,11 @@
 .settings {
     background-color: #2d2d2d;
-    min-height: 100vh;
     width: 100%;
     top: 0px;
     flex-direction: column;
     color: white;
-    padding-left: 1%;
+}
+
+.settings>p,.settings>button,.settings>h1 {
+    margin-left: 1%;
 }

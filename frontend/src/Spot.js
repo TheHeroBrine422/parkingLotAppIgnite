@@ -62,7 +62,7 @@ class Spot extends React.Component {
     }
 
     async releaseSpot() {
-        let status = await axios.post("http://192.168.1.236:3001/api/v1/releaseSpot", new URLSearchParams([['sid', this.props.spot.id]]), {headers: {authorization: "Bearer "+this.props.token}}).then(function () {return "success"}).catch(function (err) {
+        let status = await axios.post(process.env.REACT_APP_API_URL+"/api/v1/releaseSpot", new URLSearchParams([['sid', this.props.spot.id]]), {headers: {authorization: "Bearer "+this.props.token}}).then(function () {return "success"}).catch(function (err) {
             return err
         })
         if (status == "success") {
@@ -73,7 +73,7 @@ class Spot extends React.Component {
     }
 
     async takeSpot() {
-        let status = await axios.post("http://192.168.1.236:3001/api/v1/takeSpot", new URLSearchParams([['sid', this.props.spot.id]]), {headers: {authorization: "Bearer "+this.props.token}}).then(function () {return "success"}).catch(function (err) {
+        let status = await axios.post(process.env.REACT_APP_API_URL+"/api/v1/takeSpot", new URLSearchParams([['sid', this.props.spot.id]]), {headers: {authorization: "Bearer "+this.props.token}}).then(function () {return "success"}).catch(function (err) {
             return err
         })
         if (status == "success") {

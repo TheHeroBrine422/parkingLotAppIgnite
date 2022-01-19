@@ -29,7 +29,7 @@ class Settings extends React.Component {
         let errSection
 
         if (this.state.licensePlate !== this.props.user.license_plate) {
-            errLP = await axios.post("http://192.168.1.236:3001/api/v1/setLicensePlate", new URLSearchParams([['license_plate', this.state.licensePlate]]), {headers: {authorization: "Bearer "+this.props.token}}).then(() => {this.props.changePage("Settings")}).catch(function (err) {
+            errLP = await axios.post(process.env.REACT_APP_API_URL+"/api/v1/setLicensePlate", new URLSearchParams([['license_plate', this.state.licensePlate]]), {headers: {authorization: "Bearer "+this.props.token}}).then(() => {this.props.changePage("Settings")}).catch(function (err) {
                 return err
             })
         }
@@ -47,7 +47,7 @@ class Settings extends React.Component {
         }
 
         if (this.state.section !== this.props.user.section) {
-            errSection = await axios.post("http://192.168.1.236:3001/api/v1/setSection", new URLSearchParams([['section', this.state.section]]), {headers: {authorization: "Bearer "+this.props.token}}).then(() => {this.props.changePage("Settings")}).catch(function (err){
+            errSection = await axios.post(process.env.REACT_APP_API_URL+"/api/v1/setSection", new URLSearchParams([['section', this.state.section]]), {headers: {authorization: "Bearer "+this.props.token}}).then(() => {this.props.changePage("Settings")}).catch(function (err){
                 return err
             })
         }

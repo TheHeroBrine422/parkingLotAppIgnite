@@ -17,7 +17,7 @@ class Lot extends React.Component {
     async getLot() {
         let URLParams = new URLSearchParams();
         let lot = "fail"
-        lot = await axios.get("http://192.168.1.236:3001/api/v1/getLot", {
+        lot = await axios.get(process.env.REACT_APP_API_URL+"/api/v1/getLot", {
             params: URLParams,
             headers: {authorization: "Bearer " + this.props.token}
         })

@@ -12,7 +12,7 @@ class Signin extends React.Component {
     async signin(res) {
         let URLParams = new URLSearchParams();
         URLParams.append("credential", res.tokenId)
-        let token = await axios.post("http://192.168.1.236:3001/api/v1/getTokenGoogle", URLParams)
+        let token = await axios.post(process.env.REACT_APP_API_URL+"/api/v1/getTokenGoogle", URLParams)
             .then(function (res) {
                 return res.data
             })

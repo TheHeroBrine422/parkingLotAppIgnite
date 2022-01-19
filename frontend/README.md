@@ -1,6 +1,6 @@
 # frontend
 
-URLs for API are going to need to change in production. Not really sure how I can easily do that other then CTRL+F
+Whenever this moves to a new IP, make sure to set the .env file with the new backend API url. At release that will get set to whatever the prod URL is.
 
 ### XSS:
 

@@ -4,6 +4,7 @@ import Signin from "./Signin";
 import Lot from "./Lot"
 import TabBar from "./TabBar";
 import Settings from "./Settings";
+import Onboarding from "./Onboarding";
 
 class App extends React.Component {
     constructor(props) {
@@ -50,7 +51,12 @@ class App extends React.Component {
                 setTimeout(this.getUser, 1000) // dont loop too fast. Potenial DOS attack.
             }
         } else {
-            this.setState({token: this.state.token, page: this.state.page, user: user})
+            if (user.section === "" || user.license_plate === "") {
+                this.setState({token: this.state.token, page: "Onboarding", user: user})
+            } else {
+                this.setState({token: this.state.token, page: this.state.page, user: user})
+            }
+
         }
     }
 
@@ -72,6 +78,12 @@ class App extends React.Component {
                     <div>
                         <TabBar token={this.state.token} changePage={this.changePage} setToken={this.setToken} user={this.state.user}/>
                         <Settings token={this.state.token} changePage={this.changePage} user={this.state.user}/>
+                    </div>
+                )
+            case "Onboarding":
+                return (
+                    <div>
+                        <Onboarding token={this.state.token} changePage={this.changePage} user={this.state.user}/>
                     </div>
                 )
             default:

@@ -1,0 +1,13 @@
+.onboarding {
+    position: absolute;
+    background-color: #2d2d2d;
+    width: 33%;
+    left: 33%;
+    top: 0px;
+    flex-direction: column;
+    color: white;
+}
+
+.onboarding>p,.onboarding>button,.onboarding>h1 {
+    margin-left: 1%;
+}
